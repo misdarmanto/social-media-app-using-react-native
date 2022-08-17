@@ -38,16 +38,8 @@ const EditeProfile = () => {
     setBio(text);
   };
 
-  console.log(userName)
-
   const handleUpdateProfile = async () => {
     if (userName === "" || bio === "") return;
-    console.log(userName);
-    console.log(bio);
-    setUserName("");
-    setBio("");
-    return;
-
     const docRef = doc(db, "Users", currentUserData.userID);
     await updateDoc(docRef, {
       userName: userName,

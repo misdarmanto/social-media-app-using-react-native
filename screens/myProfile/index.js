@@ -1,12 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import { Avatar, Box, Button, Text, HStack, VStack } from "native-base";
-import {
-  Entypo,
-  Feather,
-  MaterialIcons,
-  FontAwesome5,
-} from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native";
+import { Feather, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import Card from "../../components/Card";
 import { useNavigation } from "@react-navigation/native";
 
