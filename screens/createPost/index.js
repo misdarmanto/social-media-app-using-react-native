@@ -187,7 +187,7 @@ export default function CreatePost() {
           }}
         />
         <IconButton
-          onPress={handlPickImageFromLocalStorage}
+          onPress={() => navigation.navigate("SearchGifs")}
           variant="ghost"
           borderRadius="full"
           _pressed={{ bg: "gray.50" }}

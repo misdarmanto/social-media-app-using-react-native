@@ -4,7 +4,7 @@ import { FlatList, TouchableOpacity } from "react-native";
 import { useContextApi } from "../../lib/hooks/useContexApi";
 import { getRandomColor } from "../../lib/functions/getRandomColor";
 import { convertTimeToString } from "../../lib/functions/convertTime";
-import { removeNotification } from "../../lib/functions/removeAndSendNotifications";
+import { removeNotification } from "../../lib/functions/handleNotification";
 import { Ionicons, Entypo } from "@expo/vector-icons";
 import {
   clearLoacalStorage,

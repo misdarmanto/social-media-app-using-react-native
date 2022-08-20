@@ -40,6 +40,7 @@ const EditeProfile = () => {
 
   const handleUpdateProfile = async () => {
     if (userName === "" || bio === "") return;
+
     const docRef = doc(db, "Users", currentUserData.userID);
     await updateDoc(docRef, {
       userName: userName,
@@ -75,7 +76,7 @@ const EditeProfile = () => {
         <Button
           variant="ghost"
           onPress={() => {
-            handleUpdateProfile();
+            handleUpdateProfile().then(() => navigation.goBack());
           }}
           _text={{ color: "darkBlue.500", fontSize: "xl" }}
         >

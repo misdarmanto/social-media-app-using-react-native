@@ -6,9 +6,7 @@ import {
   VStack,
   Text,
   IconButton,
-  Modal,
   Stack,
-  Divider,
   Actionsheet,
 } from "native-base";
 import {
@@ -47,13 +45,16 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
     isOnline,
     image,
     docPostID,
-    postID,
     userID,
     upVote,
   } = data;
   const navigation = useNavigation();
   const { currentUserData } = useContextApi();
   const isCurrentUserPost = currentUserData.userID === userID;
+  const commentTotal =
+    comments
+      .map((value) => value.commentReply.length)
+      .reduce((total, value) => total + value, 0) + comments.length;
 
   const [openModal, setOpenModal] = useState(false);
   const [displayAlert, setDisplayAlert] = useState(false);
@@ -244,7 +245,7 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
           <HStack alignItems="center">
             <IconButton
               variant="ghost"
-              onPress={() => navigation.navigate("Comment", { postID })}
+              onPress={() => navigation.navigate("Comment", { data })}
               borderRadius="full"
               _pressed={{ bg: "gray.100" }}
               _icon={{
@@ -255,7 +256,7 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
               }}
             />
             <Text color="gray.400" fontSize={12}>
-              {comments.length}
+              {commentTotal}
             </Text>
           </HStack>
 
@@ -314,10 +315,48 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
         )}
         {!isCurrentUserPost && (
           <>
-            <Actionsheet.Item>Laporkan</Actionsheet.Item>
-            <Actionsheet.Item>Laporkan</Actionsheet.Item>
-            <Actionsheet.Item>Laporkan</Actionsheet.Item>
-            <Actionsheet.Item>Laporkan</Actionsheet.Item>
+            <Actionsheet.Item
+              onPress={() => {
+                handleOpenModal();
+              }}
+            >
+              Ini adalah spam
+            </Actionsheet.Item>
+            <Actionsheet.Item
+              onPress={() => {
+                handleOpenModal();
+              }}
+            >
+              Saya tidak menyukainya
+            </Actionsheet.Item>
+            <Actionsheet.Item
+              onPress={() => {
+                handleOpenModal();
+              }}
+            >
+              Ujaran atau simbol kebencian
+            </Actionsheet.Item>
+            <Actionsheet.Item
+              onPress={() => {
+                handleOpenModal();
+              }}
+            >
+              Ketelanjangan atau aktivitas seksual
+            </Actionsheet.Item>
+            <Actionsheet.Item
+              onPress={() => {
+                handleOpenModal();
+              }}
+            >
+              Informasi palsu
+            </Actionsheet.Item>
+            <Actionsheet.Item
+              onPress={() => {
+                handleOpenModal();
+              }}
+            >
+              Lainya
+            </Actionsheet.Item>
           </>
         )}
       </ModalStyle>

@@ -27,7 +27,7 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../lib/config/firebase";
 import * as ImagePicker from "expo-image-picker";
 import { getRandomColor } from "../../lib/functions/getRandomColor";
-import TextTitleStyle from "../../components/TextTitleStyle";
+import { handleFollowUser, handleUnfollowUser } from "../../lib/functions/handleFollowAndUnfollow";
 
 export default function Home() {
   const {
@@ -68,11 +68,11 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    if (currentUserData.followers <= 5 || currentUserData.following <= 5) {
-      navigation.navigate("FriendsSuggestion");
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (currentUserData.following <= 5) {
+  //     navigation.navigate("FriendsSuggestion");
+  //   }
+  // }, []);
 
   const handlPickImageFromLocalStorage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -191,9 +191,33 @@ export default function Home() {
   }, [currentUserData]);
 
   const HeaderStyle = () => {
-    const listFollowUserSuggesion = usersCollection.filter((data) => {
+    const userSuggesion = usersCollection.filter((data) => {
       return data.userID !== currentUserData.userID;
     });
+
+    let listFollowUserSuggesion = userSuggesion;
+
+    if (Array.isArray(currentUserData.following)) {
+      currentUserData.following.forEach((user) => {
+        listFollowUserSuggesion = listFollowUserSuggesion.filter(
+          (data) => data.userID !== user
+        );
+      });
+    }
+
+    const handleFollow = (ID) => {
+      handleFollowUser({
+        currentUserID: currentUserData.userID,
+        userTargetID: ID,
+      });
+    };
+  
+    const handleUnfollow = (ID) => {
+      handleUnfollowUser({
+        currentUserID: currentUserData.userID,
+        userTargetID: ID,
+      });
+    };
 
     return (
       <VStack minHeight={20} bg="#FFF">
@@ -233,48 +257,58 @@ export default function Home() {
           </TouchableOpacity>
         </Stack>
 
-        <FlatList
-          horizontal
-          data={listFollowUserSuggesion}
-          keyExtractor={(item) => item.userID}
-          style={{
-            borderColor: "#e3e3e3",
-            borderBottomWidth: 1,
-            borderTopWidth: 1,
-            paddingVertical: 10,
-          }}
-          renderItem={({ item }) => (
-            <VStack
-              alignItems="center"
-              justifyContent="center"
-              w="32"
-              h="40"
-              mx="2"
-              space={2}
-              borderWidth={"1"}
-              borderColor="gray.200"
-              borderRadius="md"
-            >
-              <Avatar
-                bg={getRandomColor(item.userName[0])}
-                source={{ uri: item.userProfile }}
+        {listFollowUserSuggesion.length !== 0 && (
+          <FlatList
+            horizontal
+            data={listFollowUserSuggesion}
+            keyExtractor={(item) => item.userID}
+            style={{
+              borderColor: "#e3e3e3",
+              borderBottomWidth: 1,
+              borderTopWidth: 1,
+              paddingVertical: 10,
+            }}
+            renderItem={({ item }) => (
+              <VStack
+                alignItems="center"
+                justifyContent="center"
+                w="32"
+                h="40"
+                mx="2"
+                space={2}
+                borderWidth={"1"}
+                borderColor="gray.200"
+                borderRadius="md"
               >
-                {item.userName[0]}
-                {item.isOnline && <Avatar.Badge bg="green.500" />}
-              </Avatar>
-              <Text style={{ fontFamily: "myFont" }}>{item.userName} </Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate("DetailProfile", {
+                      userTargetID: item.userID,
+                    })
+                  }
+                >
+                  <Avatar
+                    bg={getRandomColor(item.userName[0])}
+                    source={{ uri: item.userProfile }}
+                  >
+                    {item.userName[0]}
+                    {item.isOnline && <Avatar.Badge bg="green.500" />}
+                  </Avatar>
+                </TouchableOpacity>
+                <Text style={{ fontFamily: "myFont" }}>{item.userName} </Text>
 
-              <Button
-                bgColor="darkBlue.500"
-                size="xs"
-                _pressed={{ bgColor: "darkBlue.300" }}
-                width={"24"}
-              >
-                Follow
-              </Button>
-            </VStack>
-          )}
-        />
+                <Button
+                  bgColor="darkBlue.500"
+                  size="xs"
+                  _pressed={{ bgColor: "darkBlue.300" }}
+                  width={"24"}
+                >
+                  Follow
+                </Button>
+              </VStack>
+            )}
+          />
+        )}
       </VStack>
     );
   };

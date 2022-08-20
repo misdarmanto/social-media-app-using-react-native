@@ -6,15 +6,8 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useContextApi } from "../../lib/hooks/useContexApi";
 import SkeletonCard from "../home/components/SkeletonCard";
 import { FlatList } from "react-native";
-import {
-  doc,
-  updateDoc,
-  arrayUnion,
-  arrayRemove,
-  Timestamp,
-} from "firebase/firestore";
-import { db } from "../../lib/config/firebase";
-import { sendNotification } from "../../lib/functions/removeAndSendNotifications";
+import { Timestamp } from "firebase/firestore";
+import { sendNotification } from "../../lib/functions/handleNotification";
 import uuid from "react-native-uuid";
 import {
   handleFollowUser,
@@ -57,7 +50,7 @@ export default function DetailProfile() {
 
     setTimeout(() => {
       setIsDataAvaliable(true);
-    }, 200);
+    }, 50);
   }, []);
 
   const handleOnRefresh = () => {
@@ -102,13 +95,33 @@ export default function DetailProfile() {
   };
 
   const handleNavigateToChatingScreen = () => {
-    navigation.navigate("Messages", {
-      userSenderData: {
-        userID: userTargetID,
-        docRef: uuid.v4(),
-        collRef: uuid.v4(),
-      },
-    });
+    const isChatRoomExis = currentUserData.chatList.find(
+      (chat) => chat.userSenderID === userTargetID
+    );
+
+    if (isChatRoomExis) {
+      navigation.navigate("Messages", {
+        userSenderData: {
+          userID: userTargetID,
+          docRef: isChatRoomExis.docRef,
+          collRef: isChatRoomExis.collRef,
+          userName: profile.userName,
+          userProfile: profile.userProfile,
+          isOnline: profile.isOnline,
+        },
+      });
+    } else {
+      navigation.navigate("Messages", {
+        userSenderData: {
+          userID: userTargetID,
+          docRef: uuid.v4(),
+          collRef: uuid.v4(),
+          userName: profile.userName,
+          userProfile: profile.userProfile,
+          isOnline: profile.isOnline,
+        },
+      });
+    }
   };
 
   const HeaderList = () => (

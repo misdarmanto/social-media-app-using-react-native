@@ -1,11 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useLayoutEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
-import { Text, VStack, Avatar, HStack, Box, Divider } from "native-base";
+import {
+  Text,
+  VStack,
+  Avatar,
+  HStack,
+  Box,
+  Divider,
+  IconButton,
+} from "native-base";
 import { useContextApi } from "../../lib/hooks/useContexApi";
 import { FlatList, TouchableOpacity } from "react-native";
 import { getRandomColor } from "../../lib/functions/getRandomColor";
 import uuid from "react-native-uuid";
-import { Entypo } from "@expo/vector-icons";
+import { Entypo, FontAwesome } from "@expo/vector-icons";
 
 const Chat = () => {
   const { usersCollection, currentUserData } = useContextApi();
@@ -62,6 +70,27 @@ const Chat = () => {
   const handleNavigateToChatMessage = (userSender) => {
     navigation.navigate("Messages", { userSenderData: userSender });
   };
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <IconButton
+          onPress={() => navigation.navigate("Search")}
+          variant="ghost"
+          borderRadius="full"
+          bg={"darkBlue.50"}
+          mr="3"
+          _pressed={{ bg: "gray.50" }}
+          _icon={{
+            as: FontAwesome,
+            name: "search",
+            size: "md",
+            color: "darkBlue.500",
+          }}
+        />
+      ),
+    });
+  }, []);
 
   const RenderItem = ({ item }) => {
     return (
@@ -124,14 +153,14 @@ const Chat = () => {
 
   return (
     <Box flex={1} bgColor="lightText">
-      {chatList.length === 0 && following.length === 0 && (
+      {chatList.length === 0 && (
         <Box flex={1} alignItems="center" justifyContent="center">
           <Entypo name="chat" size={70} color="gray" />
           <Text style={{ color: "gray", fontSize: 18 }}>Tidak ada Pesan</Text>
         </Box>
       )}
       <FlatList
-        data={following}
+        data={chatList}
         keyExtractor={(item) => item.userID}
         renderItem={({ item }) => <RenderItem item={item} />}
       />

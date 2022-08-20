@@ -5,7 +5,7 @@ import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useContextApi } from "../../lib/hooks/useContexApi";
 import { FlatList, TouchableOpacity } from "react-native";
 import { getRandomColor } from "../../lib/functions/getRandomColor";
-import { sendNotification } from "../../lib/functions/removeAndSendNotifications";
+import { sendNotification } from "../../lib/functions/handleNotification";
 import { Timestamp } from "firebase/firestore";
 import uuid from "react-native-uuid";
 import {
@@ -65,7 +65,7 @@ const RenderItem = ({ item }) => {
   const [isAlreadyFollow, setIsAlreadyFollow] = useState(false);
 
   useEffect(() => {
-    const isFollowing = item.followers.includes(currentUserData.userID);
+    const isFollowing = currentUserData.following.includes(item.userID);
     setIsAlreadyFollow(isFollowing);
   }, []);
 
@@ -74,7 +74,7 @@ const RenderItem = ({ item }) => {
       currentUserID: currentUserData.userID,
       userTargetID: ID,
     });
-    setIsAlreadyFollow(true);
+    setIsAlreadyFollow(false);
   };
 
   const handleUnfollow = (ID) => {
@@ -82,12 +82,12 @@ const RenderItem = ({ item }) => {
       currentUserID: currentUserData.userID,
       userTargetID: ID,
     });
-    setIsAlreadyFollow(false);
+    setIsAlreadyFollow(true);
   };
 
-  const handleSendNotification = (docID, data) => {
+  const handleSendNotification = (docID, userID) => {
     const newData = {
-      userID: data.userID,
+      userID: userID,
       message: `telah mengikuti kamu`,
       createdAt: Timestamp.now(),
       notificationID: uuid.v4(),
@@ -120,7 +120,7 @@ const RenderItem = ({ item }) => {
         onPress={() => {
           if (isAlreadyFollow) {
             handleFollow(item.userID);
-            handleSendNotification(item.userID, item);
+            handleSendNotification(item.userID, item.userID);
           } else {
             handleUnfollow(item.userID);
           }

@@ -1,73 +1,44 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
-import {
-  VStack,
-  Text,
-  ScrollView,
-  Input,
-  IconButton,
-  HStack,
-  Avatar,
-  Box,
-} from "native-base";
-
+import React, { useEffect, useRef, useState } from "react";
+import { VStack, Text, Input, IconButton, HStack } from "native-base";
 import { Keyboard, TouchableOpacity, FlatList } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import Card from "../../components/Card";
-import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
-
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import {
   doc,
   arrayUnion,
   Timestamp,
   updateDoc,
-  collection,
-  addDoc,
   onSnapshot,
-  query,
 } from "firebase/firestore";
 import { db } from "../../lib/config/firebase";
 import { useContextApi } from "../../lib/hooks/useContexApi";
-import { getRandomColor } from "../../lib/functions/getRandomColor";
-import { convertTimeToString } from "../../lib/functions/convertTime";
 import ModalStyle from "../../components/ModalStyle";
-
 import uuid from "react-native-uuid";
+import LoadingAnimation from "../../components/animations/LoadingAnimation";
+import ListComment from "./components/ListComment";
 
 export default function Comments() {
-  const { postID } = useRoute().params;
+  const { data } = useRoute().params;
   const navigation = useNavigation();
-  const { currentUserData, postCollection } = useContextApi();
+  const { currentUserData } = useContextApi();
+  const flatListRef = useRef();
 
   const [commentText, setCommentText] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [commentSelectedID, setCommentSelectedID] = useState([]);
-  const [iscommentUpdated, setIsCommentUpdated] = useState(false);
   const [currentPost, setCurrentPost] = useState({});
   const [isDataAvaliable, setIsDataAvaliable] = useState(false);
-
-  const getCurrentPost = () => {
-    return postCollection.find((value) => value.postID === postID);
-  };
+  const [submitName, setSubmitName] = useState("");
 
   useEffect(() => {
-    const postList = getCurrentPost();
-    setCurrentPost(postList);
-    setIsDataAvaliable(true);
-  }, [postCollection]);
-
-  // useEffect(() => {
-  //   const collRef = collection(db, "Post", currentPost.docPostID, "Comments");
-  //   const q = query(collRef);
-  //   const unsubscribe = onSnapshot(q, (querySnapshot) => {
-  //     const result = [];
-  //     querySnapshot.forEach((doc) => {
-  //         result.push(doc.data());
-  //     });
-  //     console.log(result);
-  //   });
-
-  //   return () =>  unsubscribe;
-  // }, [])
+    const docRef = doc(db, "Post", data.docPostID);
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      setCurrentPost({ ...data, ...docSnap.data() });
+      setIsDataAvaliable(true);
+    });
+    return () => unsubscribe;
+  }, []);
 
   const handleSendComment = async () => {
     const commentData = {
@@ -84,9 +55,16 @@ export default function Comments() {
     await updateDoc(docPostRef, {
       comments: arrayUnion(commentData),
     });
+  };
 
-    // const collRef = collection(db, "Post", currentPost.docPostID, "Comments");
-    // await addDoc(collRef, commentData);
+  const handleReplyCommentButtonOnPress = (commentID) => {
+    const getComment = currentPost.comments.find((comment) => {
+      return comment.commentID === commentID;
+    });
+    navigation.navigate("ReplyComment", {
+      data: getComment,
+      currentPost,
+    });
   };
 
   const handleUpdateComment = () => {
@@ -96,7 +74,7 @@ export default function Comments() {
     const commentIndex = allCommentID.indexOf(commentSelectedID);
     const commentData = currentPost.comments[commentIndex];
     setCommentText(commentData.text);
-    setIsCommentUpdated(true);
+    setSubmitName("update");
   };
 
   const handleSendUpdatedComment = async () => {
@@ -110,7 +88,6 @@ export default function Comments() {
     await updateDoc(docPostRef, {
       comments: currentPost.comments,
     });
-    setIsCommentUpdated(false);
   };
 
   const handleDeleteComment = async () => {
@@ -127,12 +104,17 @@ export default function Comments() {
   const handleSubmitComment = () => {
     if (commentText.length >= 200) return;
 
-    if (iscommentUpdated) {
-      handleSendUpdatedComment();
-    } else {
-      handleSendComment();
+    switch (submitName) {
+      case "update":
+        handleSendUpdatedComment();
+        break;
+      default:
+        handleSendComment();
+        break;
     }
+
     setCommentText("");
+    flatListRef.current.scrollToEnd();
     Keyboard.dismiss();
   };
 
@@ -140,13 +122,14 @@ export default function Comments() {
     setOpenModal(!openModal);
   };
 
-  useLayoutEffect(() => {
+  useEffect(() => {
+    if (!isDataAvaliable) return;
     navigation.setOptions({
       title: `Postingan ${currentPost.userName}`,
     });
-  }, []);
+  }, [isDataAvaliable]);
 
-  if (!isDataAvaliable) return <Text>loading...</Text>;
+  if (!isDataAvaliable) return <LoadingAnimation />;
 
   const RenderCommentsListHeader = () => (
     <>
@@ -167,107 +150,50 @@ export default function Comments() {
   );
 
   const RenderCommentsList = ({ comment }) => (
-    <VStack my="2" mx="2">
-      <HStack space={2}>
-        <TouchableOpacity>
-          <Avatar bg={getRandomColor(comment.userCreated[0])}>
-            {comment.userCreated[0]}
-            {true && <Avatar.Badge bg="green.500" />}
-          </Avatar>
-        </TouchableOpacity>
-
-        <VStack space={2}>
-          <TouchableOpacity
-            onLongPress={() => {
-              setOpenModal(true);
-              setCommentSelectedID(comment.commentID);
-            }}
-          >
-            <Box
-              bgColor={
-                comment.userCreatedID === currentUserData.userID
-                  ? "darkBlue.400"
-                  : "gray.100"
-              }
-              px={"5"}
-              py="1"
-              borderRadius="2xl"
-              mr="10"
-            >
-              <Text
-                color={
-                  comment.userCreatedID === currentUserData.userID
-                    ? "#FFF"
-                    : "gray.500"
-                }
-              >
-                {comment.userCreated}
-              </Text>
-              <Text
-                style={{ fontSize: 13 }}
-                color={
-                  comment.userCreatedID === currentUserData.userID
-                    ? "#FFF"
-                    : "gray.500"
-                }
-              >
-                {comment.text}
-              </Text>
-            </Box>
-          </TouchableOpacity>
-          <HStack pl={2} space={5}>
-            <Text color="gray.500" fontSize={10}>
-              {convertTimeToString(comment.createdAt.seconds)}
-            </Text>
-            <TouchableOpacity>
-              <Text color="gray.700" fontSize={12}>
-                Suka
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Text color="gray.700" fontSize={12}>
-                Balas
-              </Text>
-            </TouchableOpacity>
-          </HStack>
-        </VStack>
-      </HStack>
-    </VStack>
+    <>
+      <ListComment
+        isOnline={currentPost.isOnline}
+        comment={comment}
+        comentLengthVisible
+        navigateToReplyScreen={() =>
+          handleReplyCommentButtonOnPress(comment.commentID)
+        }
+        onPress={() => {
+          setOpenModal(true);
+          setCommentSelectedID(comment.commentID);
+        }}
+      />
+    </>
   );
 
   return (
     <VStack flex={1} bgColor={"#FFF"}>
       {Array.isArray(currentPost.comments) && (
         <FlatList
+          ref={flatListRef}
           ListHeaderComponent={<RenderCommentsListHeader />}
           data={currentPost.comments}
           keyExtractor={(item) => item.commentID}
           renderItem={({ item }) => <RenderCommentsList comment={item} />}
         />
       )}
-      <ModalStyle
-        isOpen={openModal}
-        onClose={handleCloseModal}
-        placement="center"
-      >
-        <VStack space={"5"}>
-          <TouchableOpacity
-            onPress={() => {
-              handleCloseModal();
-              handleDeleteComment();
-            }}
-          >
-            <Text>Hapus</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              handleCloseModal();
-              handleUpdateComment();
-            }}
-          >
-            <Text>Edit</Text>
-          </TouchableOpacity>
-        </VStack>
+      <ModalStyle isOpen={openModal} onClose={handleCloseModal}>
+        <TouchableOpacity
+          onPress={() => {
+            handleCloseModal();
+            handleDeleteComment();
+          }}
+        >
+          <Text>Hapus</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            handleCloseModal();
+            handleUpdateComment();
+          }}
+        >
+          <Text>Edit</Text>
+        </TouchableOpacity>
       </ModalStyle>
       <HStack borderTopWidth={1} borderColor="gray.200">
         <Input
@@ -275,6 +201,7 @@ export default function Comments() {
           onChangeText={setCommentText}
           placeholder="Tulis komentar..."
           fontSize="md"
+          focusable
           borderColor="#FFF"
           px={"5"}
           flex={2}

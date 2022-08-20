@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "tanya-project",
-    "slug": "tanya-project",
+    "name": "ndopok-club",
+    "slug": "ndopok-club",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -21,11 +21,12 @@
       "supportsTablet": true
     },
     "android": {
+      "versionCode" : 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1DA1F2"
       },
-      "package": "com.misdar.tanyaproject"
+      "package": "com.misdar.ndopokclub"
     },
     "web": {
       "favicon": "./assets/favicon.png"

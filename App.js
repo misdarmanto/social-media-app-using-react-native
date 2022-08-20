@@ -38,9 +38,13 @@ import { LogBox } from "react-native";
 import _ from "lodash";
 import Friends from "./screens/friends";
 import { useContextApi } from "./lib/hooks/useContexApi";
-import { getUsers } from "./lib/functions/getPost";
+import { getPost, getUsers } from "./lib/functions/getPost";
 import { useFonts } from "expo-font";
 import FriendsSuggestion from "./screens/friends/FriendsSuggestion";
+import SearchGifs from "./screens/searchGifs";
+import LoadingAnimation from "./components/animations/LoadingAnimation";
+import { StatusBar } from "expo-status-bar";
+import ReplyComment from "./screens/comments/components/ReplyComment";
 
 LogBox.ignoreLogs(["Warning:..."]); // ignore specific log
 LogBox.ignoreAllLogs(); // ignore all logs
@@ -75,44 +79,17 @@ function App() {
     return () => unsubscribe;
   }, []);
 
-  const getMergePostAndUserCollection = ({ userData, postData }) => {
-    const result = [];
-    postData.forEach((posts) => {
-      const userInfo = userData.find((user) => user.email === posts.userID);
-      result.push({
-        ...posts,
-        isOnline: userInfo.isOnline,
-        userName: userInfo.userName,
-        userProfile: userInfo.userProfile,
-      });
-    });
-    return result;
-  };
-
-  const extractData = (listData) => {
-    const result = [];
-    listData.forEach((doc) => {
-      result.push({ docPostID: doc.id, ...doc.data() });
-    });
-    return result;
-  };
-
   useEffect(() => {
-    const q = query(collection(db, "Post"), orderBy("createdAt", "desc"));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const postList = extractData(querySnapshot);
-      getUsers().then((userList) => {
-        const postResult = getMergePostAndUserCollection({
-          userData: userList,
-          postData: postList,
-        });
-        setPostCollection(postResult);
-        setUsersCollection(userList);
-        setIsDataAvaliable(true);
-      });
-    });
-    return () => unsubscribe;
-  }, [currentUserData]);
+    (async () => {
+      const users = await getUsers();
+      setUsersCollection(users);
+
+      const posts = await getPost();
+      setPostCollection(posts);
+
+      setIsDataAvaliable(true);
+    })();
+  }, []);
 
   const [loaded] = useFonts({
     myFont: require("./assets/fonts/myFont.ttf"),
@@ -120,7 +97,8 @@ function App() {
   });
 
   if (!loaded) return null;
-  if (!isDataAvaliable) return <Text>Loading...</Text>;
+
+  if (!isDataAvaliable) return <LoadingAnimation />;
 
   return (
     <ContextApi.Provider
@@ -152,7 +130,9 @@ function App() {
                 <Stack.Screen name="CreatePost" component={CreatePost} />
                 <Stack.Screen name="EditePost" component={EditPost} />
                 <Stack.Screen name="Comment" component={Comments} />
+                <Stack.Screen name="ReplyComment" component={ReplyComment} />
                 <Stack.Screen name="Messages" component={Messages} />
+                <Stack.Screen name="SearchGifs" component={SearchGifs} />
                 <Stack.Screen name="EditeProfile" component={EditeProfile} />
                 <Stack.Screen
                   name="FriendsSuggestion"
@@ -180,6 +160,7 @@ function App() {
             )}
           </Stack.Navigator>
         </NavigationContainer>
+        <StatusBar style="auto" />
       </NativeBaseProvider>
     </ContextApi.Provider>
   );
@@ -233,3 +214,42 @@ function TabNavigation() {
 }
 
 export default App;
+
+// const getMergePostAndUserCollection = ({ userData, postData }) => {
+//   const result = [];
+//   postData.forEach((posts) => {
+//     const userInfo = userData.find((user) => user.email === posts.userID);
+//     result.push({
+//       ...posts,
+//       isOnline: userInfo.isOnline,
+//       userName: userInfo.userName,
+//       userProfile: userInfo.userProfile,
+//     });
+//   });
+//   return result;
+// };
+
+// const extractData = (listData) => {
+//   const result = [];
+//   listData.forEach((doc) => {
+//     result.push({ docPostID: doc.id, ...doc.data() });
+//   });
+//   return result;
+// };
+
+// useEffect(() => {
+//   const q = query(collection(db, "Post"), orderBy("createdAt", "desc"));
+//   const unsubscribe = onSnapshot(q, (querySnapshot) => {
+//     const postList = extractData(querySnapshot);
+//     getUsers().then((userList) => {
+//       const postResult = getMergePostAndUserCollection({
+//         userData: userList,
+//         postData: postList,
+//       });
+//       setPostCollection(postResult);
+//       setUsersCollection(userList);
+//       setIsDataAvaliable(true);
+//     });
+//   });
+//   return () => unsubscribe;
+// }, [currentUserData]);
