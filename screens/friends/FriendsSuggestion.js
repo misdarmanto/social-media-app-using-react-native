@@ -62,14 +62,14 @@ const FriendsSuggestion = () => {
                 }
               >
                 <Avatar
-                  bg={getRandomColor(item.userName[0])}
+                  bg={getRandomColor(item.name[0])}
                   source={{ uri: item.userProfile }}
                 >
-                  {item.userName[0]}
+                  {item.name[0]}
                   {item.isOnline && <Avatar.Badge bg="green.500" />}
                 </Avatar>
               </TouchableOpacity>
-              <Text style={{ fontFamily: "myFont" }}>{item.userName} </Text>
+              <Text style={{ fontFamily: "myFont" }}>{item.name} </Text>
 
               <Button
                 bgColor="darkBlue.500"

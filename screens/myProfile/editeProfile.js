@@ -20,18 +20,18 @@ const EditeProfile = () => {
   const { currentUserData } = useContextApi();
   const navigation = useNavigation();
 
-  const [userName, setUserName] = useState("");
+  const [name, setName] = useState("");
   const [userProfile, setUserProfile] = useState("");
   const [bio, setBio] = useState("");
 
   useEffect(() => {
     setUserProfile(currentUserData.userProfile);
-    setUserName(currentUserData.userName);
+    setName(currentUserData.name);
     setBio(currentUserData.bio);
   }, []);
 
-  const handleOnChangeTextUserName = (text) => {
-    setUserName(text);
+  const handleOnChangeTextname = (text) => {
+    setName(text);
   };
 
   const handleOnChangeTextBio = (text) => {
@@ -39,11 +39,11 @@ const EditeProfile = () => {
   };
 
   const handleUpdateProfile = async () => {
-    if (userName === "" || bio === "") return;
+    if (name === "" || bio === "") return;
 
     const docRef = doc(db, "Users", currentUserData.userID);
     await updateDoc(docRef, {
-      userName: userName,
+      name: name,
     });
 
     await updateDoc(docRef, {
@@ -91,22 +91,22 @@ const EditeProfile = () => {
       <VStack space={"5"}>
         <TouchableOpacity>
           <Avatar
-            bg={getRandomColor(currentUserData.userName[0])}
+            bg={getRandomColor(currentUserData.name[0])}
             alignSelf="center"
             size="xl"
             source={{
               uri: currentUserData.userProfile,
             }}
           >
-            {currentUserData.userName[0]}
+            {currentUserData.name[0]}
           </Avatar>
         </TouchableOpacity>
         <VStack>
           <Text fontSize="md">Name</Text>
           <Input
             variant="underlined"
-            value={userName}
-            onChangeText={handleOnChangeTextUserName}
+            value={name}
+            onChangeText={handleOnChangeTextname}
           />
         </VStack>
         <VStack>

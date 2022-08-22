@@ -39,7 +39,7 @@ export default function Notifications() {
         result.push({
           userID: getUserSenderNotification.userID,
           userProfile: getUserSenderNotification.userProfile,
-          userName: getUserSenderNotification.userName,
+          name: getUserSenderNotification.name,
           message: data.message,
           createdAt: data.createdAt,
           notificationID: data.notificationID,
@@ -86,17 +86,17 @@ export default function Notifications() {
     >
       <HStack space={5} alignItems="center">
         <Avatar
-          bg={getRandomColor(item.userName[0])}
+          bg={getRandomColor(item.name[0])}
           source={{
             uri: item.userProfile,
           }}
         >
-          {item.userName[0]}
+          {item.name[0]}
         </Avatar>
         <VStack>
           <HStack alignItems="center" space={1}>
             <Text fontSize="sm" fontWeight="extrabold">
-              {item.userName}
+              {item.name}
             </Text>
             <Text fontSize="sm" color="gray.500">
               {item.message}
@@ -107,7 +107,9 @@ export default function Notifications() {
           </Text>
         </VStack>
       </HStack>
-      <TouchableOpacity onPress={() => handleDeleteNotification(item.notificationID)}>
+      <TouchableOpacity
+        onPress={() => handleDeleteNotification(item.notificationID)}
+      >
         <Entypo name="cross" size={24} color="gray" />
       </TouchableOpacity>
     </HStack>

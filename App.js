@@ -1,10 +1,8 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-
 import { Avatar, NativeBaseProvider } from "native-base";
-import { Text, AppState } from "react-native";
 import { ContextApi } from "./lib/helper/ContexApi";
 
 import Home from "./screens/home";
@@ -22,13 +20,7 @@ import Messages from "./screens/chat/components/Messages";
 import EditeProfile from "./screens/myProfile/editeProfile";
 import EditPost from "./screens/editePost";
 
-import {
-  doc,
-  onSnapshot,
-  collection,
-  query,
-  orderBy,
-} from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./lib/config/firebase";
 import { db } from "./lib/config/firebase";
@@ -45,6 +37,7 @@ import SearchGifs from "./screens/searchGifs";
 import LoadingAnimation from "./components/animations/LoadingAnimation";
 import { StatusBar } from "expo-status-bar";
 import ReplyComment from "./screens/comments/components/ReplyComment";
+import PostByHashTag from "./screens/displayDataByHasgTag";
 
 LogBox.ignoreLogs(["Warning:..."]); // ignore specific log
 LogBox.ignoreAllLogs(); // ignore all logs
@@ -63,6 +56,7 @@ function App() {
   const [isDataAvaliable, setIsDataAvaliable] = useState(false);
   const [postCollection, setPostCollection] = useState([]);
   const [usersCollection, setUsersCollection] = useState([]);
+  const [allUserNameTags, setAllUserNameTags] = useState([]);
 
   useEffect(() => {
     let unsubscribe = null;
@@ -84,6 +78,9 @@ function App() {
       const users = await getUsers();
       setUsersCollection(users);
 
+      const allUserNames = users.map((user) => user.userName);
+      setAllUserNameTags(allUserNames);
+
       const posts = await getPost();
       setPostCollection(posts);
 
@@ -101,18 +98,19 @@ function App() {
   if (!isDataAvaliable) return <LoadingAnimation />;
 
   return (
-    <ContextApi.Provider
-      value={{
-        postCollection,
-        setPostCollection,
-        isAuth,
-        setIsAuth,
-        currentUserData,
-        setCurrentUserData,
-        usersCollection,
-      }}
-    >
-      <NativeBaseProvider>
+    <NativeBaseProvider>
+      <ContextApi.Provider
+        value={{
+          postCollection,
+          setPostCollection,
+          allUserNameTags,
+          isAuth,
+          setIsAuth,
+          currentUserData,
+          setCurrentUserData,
+          usersCollection,
+        }}
+      >
         <NavigationContainer>
           <Stack.Navigator
             screenOptions={{ headerTitleStyle: { fontSize: 17 } }}
@@ -138,6 +136,7 @@ function App() {
                   name="FriendsSuggestion"
                   component={FriendsSuggestion}
                 />
+                <Stack.Screen name="PostByHashTag" component={PostByHashTag} />
               </>
             ) : (
               <>
@@ -161,8 +160,8 @@ function App() {
           </Stack.Navigator>
         </NavigationContainer>
         <StatusBar style="auto" />
-      </NativeBaseProvider>
-    </ContextApi.Provider>
+      </ContextApi.Provider>
+    </NativeBaseProvider>
   );
 }
 
@@ -196,7 +195,7 @@ function TabNavigation() {
                     uri: currentUserData.userProfile,
                   }}
                 >
-                  {currentUserData.userName[0]}
+                  {currentUserData.name[0]}
                 </Avatar>
               );
           }
@@ -214,42 +213,3 @@ function TabNavigation() {
 }
 
 export default App;
-
-// const getMergePostAndUserCollection = ({ userData, postData }) => {
-//   const result = [];
-//   postData.forEach((posts) => {
-//     const userInfo = userData.find((user) => user.email === posts.userID);
-//     result.push({
-//       ...posts,
-//       isOnline: userInfo.isOnline,
-//       userName: userInfo.userName,
-//       userProfile: userInfo.userProfile,
-//     });
-//   });
-//   return result;
-// };
-
-// const extractData = (listData) => {
-//   const result = [];
-//   listData.forEach((doc) => {
-//     result.push({ docPostID: doc.id, ...doc.data() });
-//   });
-//   return result;
-// };
-
-// useEffect(() => {
-//   const q = query(collection(db, "Post"), orderBy("createdAt", "desc"));
-//   const unsubscribe = onSnapshot(q, (querySnapshot) => {
-//     const postList = extractData(querySnapshot);
-//     getUsers().then((userList) => {
-//       const postResult = getMergePostAndUserCollection({
-//         userData: userList,
-//         postData: postList,
-//       });
-//       setPostCollection(postResult);
-//       setUsersCollection(userList);
-//       setIsDataAvaliable(true);
-//     });
-//   });
-//   return () => unsubscribe;
-// }, [currentUserData]);

@@ -94,18 +94,18 @@ export default function MyProfile() {
   const HeaderList = () => (
     <VStack space="2" p="2" bgColor="lightText" pt="5">
       <Avatar
-        bg={getRandomColor(profile?.userName[0])}
+        bg={getRandomColor(profile?.name[0])}
         alignSelf="center"
         size="xl"
         source={{
           uri: profile.userProfile,
         }}
       >
-        {profile.userName[0]}
+        {profile.name[0]}
         {profile.isOnline && <Avatar.Badge bg="green.500" />}
       </Avatar>
       <Text textAlign="center" fontSize="lg" fontFamily="myFont">
-        {profile.userName}
+        {profile.name}
       </Text>
       <HStack space={2} alignItems="center">
         <Button

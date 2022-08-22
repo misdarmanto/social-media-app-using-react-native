@@ -105,7 +105,7 @@ export default function DetailProfile() {
           userID: userTargetID,
           docRef: isChatRoomExis.docRef,
           collRef: isChatRoomExis.collRef,
-          userName: profile.userName,
+          name: profile.name,
           userProfile: profile.userProfile,
           isOnline: profile.isOnline,
         },
@@ -116,7 +116,7 @@ export default function DetailProfile() {
           userID: userTargetID,
           docRef: uuid.v4(),
           collRef: uuid.v4(),
-          userName: profile.userName,
+          name: profile.name,
           userProfile: profile.userProfile,
           isOnline: profile.isOnline,
         },
@@ -134,11 +134,11 @@ export default function DetailProfile() {
           uri: profile.userProfile,
         }}
       >
-        {profile.userName ? profile?.userName[0] : "A"}
+        {profile.name ? profile?.name[0] : "A"}
         {profile.isOnline && <Avatar.Badge bg="green.500" />}
       </Avatar>
       <Text textAlign="center" fontSize="lg" fontFamily="myFont">
-        {profile.userName}
+        {profile.name}
       </Text>
       <HStack space={2} alignItems="center">
         {!isAlreadyFollow && (

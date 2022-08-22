@@ -104,16 +104,16 @@ const RenderItem = ({ item }) => {
           }
         >
           <Avatar
-            bg={getRandomColor(item.userName[0])}
+            bg={getRandomColor(item.name[0])}
             source={{
               uri: item.userProfile,
             }}
           >
-            {item.userName[0]}
+            {item.name[0]}
           </Avatar>
         </TouchableOpacity>
         <Text fontSize="md" fontFamily="myFont">
-          {item.userName}
+          {item.name}
         </Text>
       </HStack>
       <Button

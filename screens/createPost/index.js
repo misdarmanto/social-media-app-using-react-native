@@ -1,6 +1,5 @@
-import React, { useLayoutEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
-  TextArea,
   Button,
   VStack,
   HStack,
@@ -8,14 +7,21 @@ import {
   ScrollView,
   IconButton,
   Box,
+  Actionsheet,
+  Avatar,
+  Input,
+  Icon,
+  Stack,
 } from "native-base";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import {
   MaterialIcons,
   MaterialCommunityIcons,
   Feather,
+  FontAwesome,
+  Octicons,
 } from "@expo/vector-icons";
-import { Image, Dimensions } from "react-native";
+import { Image, TextInput, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { collection, doc, setDoc, Timestamp } from "firebase/firestore";
@@ -24,15 +30,32 @@ import { useContextApi } from "../../lib/hooks/useContexApi";
 import { uploadImage } from "../../lib/functions/uploadImage";
 import * as ImagePicker from "expo-image-picker";
 import uuid from "react-native-uuid";
+import { getRandomColor } from "../../lib/functions/getRandomColor";
 
 export default function CreatePost() {
-  const { currentUserData } = useContextApi();
+  const { currentUserData, allUserNameTags, usersCollection } = useContextApi();
   const { imageUri } = useRoute().params;
-
   const [textAreaValue, setTextAreaValue] = useState("");
   const [images, setImages] = useState(imageUri);
+  const [showModal, setShowModal] = useState(false);
+  const [listUserInfo, setListUserInfo] = useState([]);
+  const [tags, setTags] = useState([]);
 
   const navigation = useNavigation();
+
+  const getUserInfo = usersCollection.map((user) => {
+    return {
+      tag: user.userName,
+      name: user.name,
+      userID: user.userID,
+      userProfile: user.userProfile,
+      isOnline: user.isOnline,
+    };
+  });
+
+  useEffect(() => {
+    setListUserInfo(getUserInfo);
+  }, []);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -67,6 +90,14 @@ export default function CreatePost() {
     setImages(result);
   };
 
+  const handleSearchTag = (value) => {
+    const searchTag = getUserInfo.filter((user) => {
+      if (user.tag.toUpperCase().search(value.toUpperCase()) !== -1)
+        return user;
+    });
+    setListUserInfo(searchTag);
+  };
+
   const createPost = async () => {
     const imageUploaded = images ? await uploadImage(images.uri) : null;
     try {
@@ -79,12 +110,18 @@ export default function CreatePost() {
         upVote: [],
         createdAt: Timestamp.now(),
         postID: uuid.v4(),
+        tags: tags,
+        hashTags: [],
       };
       const userCollectionsRef = doc(collection(db, "Post"));
       await setDoc(userCollectionsRef, data);
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const handleModal = () => {
+    setShowModal(!showModal);
   };
 
   const handleSubmit = async () => {
@@ -134,20 +171,29 @@ export default function CreatePost() {
 
   return (
     <VStack flex={1} justifyContent="space-between" bgColor={"#FFF"} p={1}>
-      <ScrollView>
-        <TextArea
-          my={5}
-          style={{ minHeight: 100 }}
+      <ScrollView px={"5"}>
+        <TextInput
           value={textAreaValue}
+          style={{
+            fontSize: 16,
+            marginTop: 5,
+            letterSpacing: 0.5,
+            color: "gray",
+          }}
+          editable={true}
+          multiline={true}
           onChangeText={handleTextArea}
           placeholder="Apa yang kamu pikirkan?"
-          placeholderTextColor={"gray.500"}
-          bgColor={"#FFF"}
-          fontSize="md"
-          borderColor={"#FFF"}
-          _focus={{ borderColor: "#FFF" }}
-          autoFocus
+          placeholderTextColor="gray"
+          autoFocus={true}
         />
+        <HStack flexWrap="wrap" space={2}>
+          {tags.map((value, index) => (
+            <TouchableOpacity key={index}>
+              <Text color="darkBlue.500">{value.tag}</Text>
+            </TouchableOpacity>
+          ))}
+        </HStack>
         {images && (
           <Box>
             <IconButton
@@ -187,7 +233,6 @@ export default function CreatePost() {
           }}
         />
         <IconButton
-          onPress={() => navigation.navigate("SearchGifs")}
           variant="ghost"
           borderRadius="full"
           _pressed={{ bg: "gray.50" }}
@@ -200,7 +245,7 @@ export default function CreatePost() {
         />
 
         <IconButton
-          onPress={handlPickImageFromLocalStorage}
+          onPress={handleModal}
           variant="ghost"
           borderRadius="full"
           _pressed={{ bg: "gray.50" }}
@@ -211,7 +256,67 @@ export default function CreatePost() {
             color: "darkBlue.400",
           }}
         />
+
+        <IconButton
+          onPress={handleModal}
+          variant="ghost"
+          borderRadius="full"
+          _pressed={{ bg: "gray.50" }}
+          _icon={{
+            as: Octicons,
+            name: "hash",
+            size: "2xl",
+            color: "darkBlue.400",
+          }}
+        />
       </HStack>
+
+      <Actionsheet isOpen={showModal} onClose={handleModal}>
+        <Actionsheet.Content minH="2xl">
+          <Box justifyContent="center">
+            <Input
+              w={"100%"}
+              mb="5"
+              borderRadius="full"
+              onChangeText={handleSearchTag}
+              InputLeftElement={
+                <Icon
+                  as={<FontAwesome name="search" size={30} color="black" />}
+                  size={8}
+                  ml="5"
+                  color="muted.400"
+                />
+              }
+              placeholder="Cari..."
+              _focus={{ bgColor: "gray.50", borderColor: "gray.300" }}
+            />
+          </Box>
+          {listUserInfo.map((user, index) => (
+            <Actionsheet.Item
+              key={index}
+              onPress={() => {
+                handleModal();
+                if (tags.includes(user.tag)) return;
+                setTags([...tags, { tag: user.tag, userID: user.userID }]);
+              }}
+            >
+              <HStack space={2}>
+                <Avatar
+                  bg={getRandomColor(user.name[0])}
+                  source={{ uri: user.userProfile }}
+                >
+                  {user.name[0]}
+                  {user.isOnline && <Avatar.Badge bg="green.500" />}
+                </Avatar>
+                <VStack>
+                  <Text fontFamily="myFont">{user.name}</Text>
+                  <Text color="gray.500">{user.tag}</Text>
+                </VStack>
+              </HStack>
+            </Actionsheet.Item>
+          ))}
+        </Actionsheet.Content>
+      </Actionsheet>
     </VStack>
   );
 }

@@ -5,28 +5,48 @@ import { useContextApi } from "../../../lib/hooks/useContexApi";
 import { getRandomColor } from "../../../lib/functions/getRandomColor";
 import { convertTimeToString } from "../../../lib/functions/convertTime";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 const ListComment = ({
   comment,
-  isOnline,
-  onPress,
+  onPress = () => null,
   isChildList,
   navigateToReplyScreen,
   comentLengthVisible,
+  onButtonLikeClick = () => null,
 }) => {
-  const { currentUserData } = useContextApi();
+  const { currentUserData, usersCollection } = useContextApi();
+  const navigation = useNavigation();
+  const detailUserComment = usersCollection.find((user) => {
+    return user.userID === comment.userCreatedID;
+  });
+
   return (
     <VStack my="2" ml={isChildList ? "16" : "2"} mr="6">
       <HStack space={2}>
-        <TouchableOpacity>
-          <Avatar bg={getRandomColor(comment.userCreated[0])}>
-            {comment.userCreated[0]}
-            {isOnline && <Avatar.Badge bg="green.500" />}
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("DetailProfile", {
+              userTargetID: comment.userCreatedID,
+            })
+          }
+        >
+          <Avatar bg={getRandomColor(detailUserComment.name[0])}>
+            {detailUserComment.name[0]}
+            {detailUserComment.isOnline && <Avatar.Badge bg="green.500" />}
           </Avatar>
         </TouchableOpacity>
 
         <VStack space={2}>
-          <TouchableOpacity onLongPress={onPress}>
+          <TouchableOpacity
+            onPress={() => {
+              if (comment.userCreatedID === currentUserData.userID) {
+                onPress();
+              } else {
+                return;
+              }
+            }}
+          >
             <Box
               bgColor={
                 comment.userCreatedID === currentUserData.userID
@@ -46,7 +66,7 @@ const ListComment = ({
                 }
                 fontFamily="myFont"
               >
-                {comment.userCreated}
+                {detailUserComment.name}
               </Text>
               <Text
                 style={{ fontSize: 13 }}
@@ -64,7 +84,7 @@ const ListComment = ({
             <Text color="gray.500" fontSize={10}>
               {convertTimeToString(comment.createdAt.seconds)}
             </Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={onButtonLikeClick}>
               <Text color="gray.700" fontSize={12}>
                 Suka
               </Text>

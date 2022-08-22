@@ -39,7 +39,7 @@ const Chat = () => {
           docRef: uuid.v4(),
           isOnline: getUserFollowing.isOnline,
           userProfile: getUserFollowing.userProfile,
-          userName: getUserFollowing.userName,
+          name: getUserFollowing.name,
           userID: getUserFollowing.userID,
         });
       });
@@ -59,7 +59,7 @@ const Chat = () => {
           docRef: list.docRef,
           isOnline: getUserSender.isOnline,
           userProfile: getUserSender.userProfile,
-          userName: getUserSender.userName,
+          name: getUserSender.name,
           userID: getUserSender.userID,
         });
       });
@@ -103,17 +103,17 @@ const Chat = () => {
         >
           <HStack space={5} alignItems="center">
             <Avatar
-              bg={getRandomColor(item.userName[0])}
+              bg={getRandomColor(item.name[0])}
               source={{
                 uri: item.userProfile,
               }}
             >
-              {item.userName[0]}
+              {item.name[0]}
               {item.isOnline && <Avatar.Badge bg="green.500" />}
             </Avatar>
             <VStack>
               <Text fontSize="md" fontFamily="myFont">
-                {item.userName}
+                {item.name}
               </Text>
               <Text fontSize="xs" color="gray.500">
                 hello world
@@ -136,12 +136,12 @@ const Chat = () => {
           <TouchableOpacity onPress={() => handleNavigateToChatMessage(item)}>
             <Avatar
               mx={"2"}
-              bg={getRandomColor(item.userName[0])}
+              bg={getRandomColor(item.name[0])}
               source={{
                 uri: item.userProfile,
               }}
             >
-              {item.userName[0]}
+              {item.name[0]}
               {item.isOnline && <Avatar.Badge bg="green.500" />}
             </Avatar>
           </TouchableOpacity>

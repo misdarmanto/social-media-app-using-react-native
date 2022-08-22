@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState } from "react";
-import { FlatList, Touchable, TouchableOpacity } from "react-native";
+import { FlatList, TouchableOpacity } from "react-native";
 import { Box, HStack, Icon, Input, Text, Avatar } from "native-base";
 import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -20,7 +20,7 @@ export default function Search() {
       (data) => data.userID !== currentUserData.userID
     );
     const regex = userList.filter((data) => {
-      if (data.userName.toUpperCase().search(value.toUpperCase()) !== -1) {
+      if (data.name.toUpperCase().search(value.toUpperCase()) !== -1) {
         return data;
       }
     });
@@ -66,15 +66,15 @@ export default function Search() {
       >
         <HStack space={5} alignItems="center" mx="2" my="2">
           <Avatar
-            bg={getRandomColor(item.userName[0])}
+            bg={getRandomColor(item.name[0])}
             source={{
               uri: item.userProfile,
             }}
           >
-            {item.userName[0]}
+            {item.name[0]}
           </Avatar>
           <Text fontSize="md" fontFamily="myFont">
-            {item.userName}
+            {item.name}
           </Text>
         </HStack>
       </TouchableOpacity>

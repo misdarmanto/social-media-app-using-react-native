@@ -33,9 +33,11 @@ import { useContextApi } from "../lib/hooks/useContexApi";
 import AlertDialogStyle from "./AlertDialogStyle";
 import ModalStyle from "./ModalStyle";
 import { shareThisApp } from "../lib/functions/shareThisApp";
+import { formatStringLength } from "../lib/functions/formatString";
 
 const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
   const {
+    name,
     userName,
     userProfile,
     createdAt,
@@ -47,6 +49,8 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
     docPostID,
     userID,
     upVote,
+    tags,
+    hashTags,
   } = data;
   const navigation = useNavigation();
   const { currentUserData } = useContextApi();
@@ -127,22 +131,22 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
   };
 
   const HeaderCard = (
-    <HStack justifyContent="space-between" mb={2}>
+    <HStack justifyContent="space-between" mb={2} alignItems="center">
       <HStack space={2}>
         {isOnCommentScreen && (
           <TouchableOpacity onPress={avatarOnPress}>
-            <Avatar
-              bg={getRandomColor(userName[0])}
-              source={{ uri: userProfile }}
-            >
-              {userName[0]}
+            <Avatar bg={getRandomColor(name[0])} source={{ uri: userProfile }}>
+              {name[0]}
               {isOnline && <Avatar.Badge bg="green.500" />}
             </Avatar>
           </TouchableOpacity>
         )}
         <HStack alignItems="center" space={2}>
           <Text fontSize="lg" style={{ fontFamily: "myFont" }}>
-            {userName}
+            {name}
+          </Text>
+          <Text color="gray.500" fontSize={12}>
+            {formatStringLength(userName)}
           </Text>
           <Text color="gray.500" fontSize={12}>
             {convertTimeToString(createdAt.seconds)}
@@ -158,7 +162,6 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
   return (
     <Stack
       direction={isOnCommentScreen ? "column" : "row"}
-      minH={150}
       bg="#FFF"
       px={2}
       py={2}
@@ -168,11 +171,8 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
     >
       {!isOnCommentScreen && (
         <TouchableOpacity onPress={avatarOnPress}>
-          <Avatar
-            bg={getRandomColor(userName[0])}
-            source={{ uri: userProfile }}
-          >
-            {userName[0]}
+          <Avatar bg={getRandomColor(name[0])} source={{ uri: userProfile }}>
+            {name[0]}
             {isOnline && <Avatar.Badge bg="green.500" />}
           </Avatar>
         </TouchableOpacity>
@@ -180,7 +180,7 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
       <Box flex={isOnCommentScreen ? 0 : 1}>
         {HeaderCard}
         {data.image ? (
-          <VStack space={2}>
+          <VStack space={2} mb={2}>
             <Text color="gray.500" fontSize="md">
               {text}
             </Text>
@@ -201,6 +201,35 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
             </Text>
           </Box>
         )}
+
+        <HStack flexWrap="wrap" space={2}>
+          {tags.map((value, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() =>
+                navigation.navigate("DetailProfile", {
+                  userTargetID: value.userID,
+                })
+              }
+            >
+              <Text color="darkBlue.500">{value.tag}</Text>
+            </TouchableOpacity>
+          ))}
+        </HStack>
+        <HStack flexWrap="wrap" space={2}>
+          {hashTags.map((hashTag, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() =>
+                navigation.navigate("PostByHashTag", {
+                  hashTag: hashTag,
+                })
+              }
+            >
+              <Text color="darkBlue.500">{hashTag}</Text>
+            </TouchableOpacity>
+          ))}
+        </HStack>
 
         <HStack space={7} alignItems="center">
           <HStack alignItems="center">

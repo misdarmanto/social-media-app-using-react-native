@@ -90,14 +90,14 @@ export default function Messages() {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: userSenderData.userName,
+      title: userSenderData.name,
       headerRight: () => (
         <Avatar
-          bg={getRandomColor(userSenderData.userName[0])}
+          bg={getRandomColor(userSenderData.name[0])}
           source={{ uri: userSenderData.userProfile }}
           size="md"
         >
-          {userSenderData.userName[0]}
+          {userSenderData.name[0]}
           {userSenderData.isOnline && <Avatar.Badge bg="green.500" />}
         </Avatar>
       ),

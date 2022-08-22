@@ -1,9 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { VStack, Text, Input, IconButton, HStack } from "native-base";
+import { VStack, Text, Input, IconButton, HStack, Modal } from "native-base";
 import { Keyboard, TouchableOpacity, FlatList } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import Card from "../../components/Card";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import {
+  FontAwesome,
+  Ionicons,
+  MaterialIcons,
+  AntDesign,
+} from "@expo/vector-icons";
 import {
   doc,
   arrayUnion,
@@ -13,7 +18,6 @@ import {
 } from "firebase/firestore";
 import { db } from "../../lib/config/firebase";
 import { useContextApi } from "../../lib/hooks/useContexApi";
-import ModalStyle from "../../components/ModalStyle";
 import uuid from "react-native-uuid";
 import LoadingAnimation from "../../components/animations/LoadingAnimation";
 import ListComment from "./components/ListComment";
@@ -47,7 +51,6 @@ export default function Comments() {
       commentLikes: [],
       commentReply: [],
       createdAt: Timestamp.now(),
-      userCreated: currentUserData.userName,
       userCreatedID: currentUserData.userID,
     };
 
@@ -55,6 +58,7 @@ export default function Comments() {
     await updateDoc(docPostRef, {
       comments: arrayUnion(commentData),
     });
+    setSubmitName("")
   };
 
   const handleReplyCommentButtonOnPress = (commentID) => {
@@ -67,22 +71,23 @@ export default function Comments() {
     });
   };
 
+  const getCurrentIndexComment = (commentID) => {
+    const allCommentID = currentPost.comments.map((comment) => {
+      return comment.commentID;
+    });
+    return allCommentID.indexOf(commentID);
+  };
+
   const handleUpdateComment = () => {
-    const allCommentID = currentPost.comments.map(
-      (comment) => comment.commentID
-    );
-    const commentIndex = allCommentID.indexOf(commentSelectedID);
-    const commentData = currentPost.comments[commentIndex];
+    const indexComment = getCurrentIndexComment(commentSelectedID);
+    const commentData = currentPost.comments[indexComment];
     setCommentText(commentData.text);
     setSubmitName("update");
   };
 
   const handleSendUpdatedComment = async () => {
-    const allCommentID = currentPost.comments.map(
-      (comment) => comment.commentID
-    );
-    const commentIndex = allCommentID.indexOf(commentSelectedID);
-    currentPost.comments[commentIndex].text = commentText;
+    const indexComment = getCurrentIndexComment(commentSelectedID);
+    currentPost.comments[indexComment].text = commentText;
 
     const docPostRef = doc(db, "Post", currentPost.docPostID);
     await updateDoc(docPostRef, {
@@ -101,6 +106,34 @@ export default function Comments() {
     });
   };
 
+  const handleLikeComment = async (commentID) => {
+    if (!Array.isArray(currentPost.comments)) return;
+    const newComments = currentPost.comments.find((comment) => {
+      return comment.commentID === commentID;
+    });
+
+    if (!Array.isArray(newComments.commentLikes)) return;
+    const isAlreadyCLiked = newComments.commentLikes.includes(
+      currentUserData.userID
+    );
+    if (isAlreadyCLiked) {
+      const newCommentLikes = newComments.commentLikes.filter((userLikeID) => {
+        return userLikeID !== currentUserData.userID;
+      });
+      newComments.commentLikes = newCommentLikes;
+    } else {
+      newComments.commentLikes.push(currentUserData.userID);
+    }
+
+    const indexComment = getCurrentIndexComment(commentID);
+    currentPost.comments[indexComment] = newComments;
+
+    const docPostRef = doc(db, "Post", currentPost.docPostID);
+    await updateDoc(docPostRef, {
+      comments: currentPost.comments,
+    });
+  };
+
   const handleSubmitComment = () => {
     if (commentText.length >= 200) return;
 
@@ -113,9 +146,10 @@ export default function Comments() {
         break;
     }
 
-    setCommentText("");
-    flatListRef.current.scrollToEnd();
     Keyboard.dismiss();
+    setCommentText("");
+    setSubmitName("")
+    flatListRef.current.scrollToEnd();
   };
 
   const handleCloseModal = () => {
@@ -125,7 +159,7 @@ export default function Comments() {
   useEffect(() => {
     if (!isDataAvaliable) return;
     navigation.setOptions({
-      title: `Postingan ${currentPost.userName}`,
+      title: `Postingan ${currentPost.name}`,
     });
   }, [isDataAvaliable]);
 
@@ -150,20 +184,19 @@ export default function Comments() {
   );
 
   const RenderCommentsList = ({ comment }) => (
-    <>
-      <ListComment
-        isOnline={currentPost.isOnline}
-        comment={comment}
-        comentLengthVisible
-        navigateToReplyScreen={() =>
-          handleReplyCommentButtonOnPress(comment.commentID)
-        }
-        onPress={() => {
-          setOpenModal(true);
-          setCommentSelectedID(comment.commentID);
-        }}
-      />
-    </>
+    <ListComment
+      isOnline={currentPost.isOnline}
+      comment={comment}
+      onButtonLikeClick={() => handleLikeComment(comment.commentID)}
+      comentLengthVisible={true}
+      navigateToReplyScreen={() =>
+        handleReplyCommentButtonOnPress(comment.commentID)
+      }
+      onPress={() => {
+        setOpenModal(true);
+        setCommentSelectedID(comment.commentID);
+      }}
+    />
   );
 
   return (
@@ -177,24 +210,37 @@ export default function Comments() {
           renderItem={({ item }) => <RenderCommentsList comment={item} />}
         />
       )}
-      <ModalStyle isOpen={openModal} onClose={handleCloseModal}>
-        <TouchableOpacity
-          onPress={() => {
-            handleCloseModal();
-            handleDeleteComment();
-          }}
-        >
-          <Text>Hapus</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => {
-            handleCloseModal();
-            handleUpdateComment();
-          }}
-        >
-          <Text>Edit</Text>
-        </TouchableOpacity>
-      </ModalStyle>
+      <Modal isOpen={openModal} onClose={handleCloseModal} size="lg">
+        <Modal.Content>
+          <Modal.CloseButton />
+          <Modal.Body>
+            <VStack space={5}>
+              <TouchableOpacity
+                onPress={() => {
+                  handleCloseModal();
+                  handleDeleteComment();
+                }}
+              >
+                <HStack alignItems="center" space={2}>
+                  <MaterialIcons name="delete" size={24} color="gray" />
+                  <Text>Hapus</Text>
+                </HStack>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  handleCloseModal();
+                  handleUpdateComment();
+                }}
+              >
+                <HStack alignItems="center" space={2}>
+                  <AntDesign name="edit" size={24} color="gray" />
+                  <Text>Edit</Text>
+                </HStack>
+              </TouchableOpacity>
+            </VStack>
+          </Modal.Body>
+        </Modal.Content>
+      </Modal>
       <HStack borderTopWidth={1} borderColor="gray.200">
         <Input
           value={commentText}

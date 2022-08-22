@@ -1,5 +1,4 @@
 import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
-
 import {
   Avatar,
   Badge,
@@ -27,7 +26,11 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../lib/config/firebase";
 import * as ImagePicker from "expo-image-picker";
 import { getRandomColor } from "../../lib/functions/getRandomColor";
-import { handleFollowUser, handleUnfollowUser } from "../../lib/functions/handleFollowAndUnfollow";
+import {
+  handleFollowUser,
+  handleUnfollowUser,
+} from "../../lib/functions/handleFollowAndUnfollow";
+import { formatStringLength } from "../../lib/functions/formatString";
 
 export default function Home() {
   const {
@@ -211,7 +214,7 @@ export default function Home() {
         userTargetID: ID,
       });
     };
-  
+
     const handleUnfollow = (ID) => {
       handleUnfollowUser({
         currentUserID: currentUserData.userID,
@@ -259,6 +262,7 @@ export default function Home() {
 
         {listFollowUserSuggesion.length !== 0 && (
           <FlatList
+            showsHorizontalScrollIndicator={false}
             horizontal
             data={listFollowUserSuggesion}
             keyExtractor={(item) => item.userID}
@@ -273,7 +277,7 @@ export default function Home() {
                 alignItems="center"
                 justifyContent="center"
                 w="32"
-                h="40"
+                py="2"
                 mx="2"
                 space={2}
                 borderWidth={"1"}
@@ -288,15 +292,21 @@ export default function Home() {
                   }
                 >
                   <Avatar
-                    bg={getRandomColor(item.userName[0])}
+                    bg={getRandomColor(item.name[0])}
                     source={{ uri: item.userProfile }}
                   >
-                    {item.userName[0]}
+                    {item.name[0]}
                     {item.isOnline && <Avatar.Badge bg="green.500" />}
                   </Avatar>
                 </TouchableOpacity>
-                <Text style={{ fontFamily: "myFont" }}>{item.userName} </Text>
-
+                <VStack>
+                  <Text style={{ fontFamily: "myFont" }}>
+                    {formatStringLength(item.name)}
+                  </Text>
+                  <Text color="gray.500">
+                    {formatStringLength(item.userName)}
+                  </Text>
+                </VStack>
                 <Button
                   bgColor="darkBlue.500"
                   size="xs"

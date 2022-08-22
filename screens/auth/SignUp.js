@@ -25,8 +25,8 @@ import { useContextApi } from "../../lib/hooks/useContexApi";
 export default function SignUp() {
   const { setIsAuth } = useContextApi();
 
-  const [userName, setUserName] = useState(null);
-  const [userNameError, setUserNameError] = useState({
+  const [name, setName] = useState(null);
+  const [nameError, setNameError] = useState({
     isError: false,
     message: "",
   });
@@ -49,13 +49,13 @@ export default function SignUp() {
       return;
     }
 
-    if (!userName) {
-      setUserNameError({ isError: true, message: "name field can't empty" });
+    if (!name) {
+      setNameError({ isError: true, message: "name field can't empty" });
       return;
     }
 
-    if (userName.length <= 3 || userName.length >= 15) {
-      setUserNameError({
+    if (name.length <= 3 || name.length >= 15) {
+      setNameError({
         isError: true,
         message: "name character should be 3 to 15",
       });
@@ -83,9 +83,9 @@ export default function SignUp() {
       .then((userCredential) => {
         const user = userCredential.user;
         const userData = {
-          userName: userName,
+          name: name,
           email: user.email,
-          userProfile: user.photoURL || "",
+          userProfile: user.photoURL,
           isOnline: true,
           bio: "",
           chatList: [],
@@ -96,7 +96,7 @@ export default function SignUp() {
         createUserDB(userData, user.email).then(() => {
           setIsAuth(true);
           setEmail(null);
-          setUserName(null);
+          setName(null);
           setPassword(null);
         });
       })
@@ -154,7 +154,7 @@ export default function SignUp() {
             </FormControl.ErrorMessage>
           </FormControl>
 
-          <FormControl isInvalid={userNameError.isError}>
+          <FormControl isInvalid={nameError.isError}>
             <Input
               bgColor={"gray.100"}
               borderColor="gray.200"
@@ -168,15 +168,15 @@ export default function SignUp() {
                   color="muted.400"
                 />
               }
-              value={userName}
-              onChangeText={setUserName}
-              onChange={() => setUserNameError({ isError: false, message: "" })}
+              value={name}
+              onChangeText={setName}
+              onChange={() => setNameError({ isError: false, message: "" })}
               placeholder="Name"
             />
             <FormControl.ErrorMessage
               leftIcon={<WarningOutlineIcon size="xs" />}
             >
-              {userNameError.message}
+              {nameError.message}
             </FormControl.ErrorMessage>
           </FormControl>
 
