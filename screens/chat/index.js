@@ -13,7 +13,7 @@ import { useContextApi } from "../../lib/hooks/useContexApi";
 import { FlatList, TouchableOpacity } from "react-native";
 import { getRandomColor } from "../../lib/functions/getRandomColor";
 import uuid from "react-native-uuid";
-import { Entypo, FontAwesome } from "@expo/vector-icons";
+import { Entypo, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 
 const Chat = () => {
   const { usersCollection, currentUserData } = useContextApi();
@@ -61,6 +61,7 @@ const Chat = () => {
           userProfile: getUserSender.userProfile,
           name: getUserSender.name,
           userID: getUserSender.userID,
+          isVerified: getUserSender.isVerified,
         });
       });
       setChatList(userSenders);
@@ -112,12 +113,14 @@ const Chat = () => {
               {item.isOnline && <Avatar.Badge bg="green.500" />}
             </Avatar>
             <VStack>
-              <Text fontSize="md" fontFamily="myFont">
-                {item.name}
-              </Text>
-              <Text fontSize="xs" color="gray.500">
-                hello world
-              </Text>
+              <HStack alignItems="center" space="1">
+                <Text fontSize="md" fontFamily="myFont">
+                  {item.name}
+                </Text>
+                {item.isVerified && (
+                  <MaterialIcons name="verified" size={18} color="dodgerblue" />
+                )}
+              </HStack>
             </VStack>
           </HStack>
         </HStack>

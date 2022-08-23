@@ -58,7 +58,7 @@ export default function Comments() {
     await updateDoc(docPostRef, {
       comments: arrayUnion(commentData),
     });
-    setSubmitName("")
+    setSubmitName("");
   };
 
   const handleReplyCommentButtonOnPress = (commentID) => {
@@ -148,7 +148,7 @@ export default function Comments() {
 
     Keyboard.dismiss();
     setCommentText("");
-    setSubmitName("")
+    setSubmitName("");
     flatListRef.current.scrollToEnd();
   };
 
@@ -157,9 +157,8 @@ export default function Comments() {
   };
 
   useEffect(() => {
-    if (!isDataAvaliable) return;
     navigation.setOptions({
-      title: `Postingan ${currentPost.name}`,
+      title: currentPost.name ? `Postingan ${currentPost.name}` : "",
     });
   }, [isDataAvaliable]);
 

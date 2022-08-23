@@ -55,26 +55,28 @@ export default function PostByHashTag() {
   }, []);
 
   return isDataAvaliable ? (
-    <FlatList
-      data={post}
-      keyExtractor={(item) => item.postID}
-      renderItem={({ item }) => (
-        <Card
-          data={item}
-          avatarOnPress={() => {
-            if (currentUserData.userID === item.userID) {
-              navigation.navigate("MyProfile");
-            } else {
-              navigation.navigate("DetailProfile", {
-                userTargetID: item.userID,
-              });
-            }
-          }}
-        />
-      )}
-      refreshing={isRefresh}
-      onRefresh={handleOnRefresh}
-    />
+    <Box flex={1} bgColor="#FFF">
+      <FlatList
+        data={post}
+        keyExtractor={(item) => item.postID}
+        renderItem={({ item }) => (
+          <Card
+            data={item}
+            avatarOnPress={() => {
+              if (currentUserData.userID === item.userID) {
+                navigation.navigate("MyProfile");
+              } else {
+                navigation.navigate("DetailProfile", {
+                  userTargetID: item.userID,
+                });
+              }
+            }}
+          />
+        )}
+        refreshing={isRefresh}
+        onRefresh={handleOnRefresh}
+      />
+    </Box>
   ) : (
     <Box flex={1} bgColor="#FFF">
       {[1, 2, 3, 4, 5].map((data) => (

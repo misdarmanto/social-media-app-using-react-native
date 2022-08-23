@@ -12,12 +12,15 @@ import {
   FormControl,
   WarningOutlineIcon,
   Spinner,
+  ScrollView,
+  Checkbox,
 } from "native-base";
 import { MaterialIcons, Entypo } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { auth } from "../../lib/config/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { emailInputCheck, passwordInputCheck } from "./functions/inputCheck";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
@@ -35,18 +38,13 @@ export default function Login() {
   const navigation = useNavigation();
 
   const handleSubmit = () => {
-    if (!email) {
-      setEmailError({ isError: true, message: "email field can't empty" });
-      return;
-    }
+    const emailInputCheckResult = emailInputCheck(email);
+    setEmailError(emailInputCheckResult);
+    if (emailInputCheckResult.isError) return;
 
-    if (!password) {
-      setPasswordError({
-        isError: true,
-        message: "password field can't empty",
-      });
-      return;
-    }
+    const passwordInputCheckResult = passwordInputCheck(password);
+    setPasswordError(passwordInputCheckResult);
+    if (passwordInputCheckResult.isError) return;
 
     setIsLoading(true);
     signInWithEmailAndPassword(auth, email, password)
@@ -87,27 +85,22 @@ export default function Login() {
   };
 
   return (
-    <VStack flex={1} space={"20"} bgColor="darkBlue.500" pt="30%">
-      {isLoading && (
-        <Spinner
-          color="darkBlue.500"
-          position="absolute"
-          top="50%"
-          right="50%"
-          zIndex={1}
-        />
-      )}
-      <Heading textAlign="center" color="lightText">
-        SignIn
-      </Heading>
-      <Box
-        flex={2}
-        bgColor="lightText"
-        borderTopRadius="30"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Stack space={4} w="100%" p={"5"}>
+    <ScrollView flex={1} bgColor="#FFF">
+      <VStack space="10" pt="50%">
+        {isLoading && (
+          <Spinner
+            color="darkBlue.500"
+            position="absolute"
+            top="50%"
+            right="50%"
+            zIndex={1}
+          />
+        )}
+        <Heading textAlign="center" color="darkBlue.500">
+          SignIn
+        </Heading>
+
+        <Stack space={4} p={"5"}>
           <FormControl isInvalid={emailError.isError}>
             <Input
               bgColor={"gray.100"}
@@ -189,7 +182,7 @@ export default function Login() {
             </Text>
           </TouchableOpacity>
         </HStack>
-      </Box>
-    </VStack>
+      </VStack>
+    </ScrollView>
   );
 }

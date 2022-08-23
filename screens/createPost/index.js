@@ -16,7 +16,6 @@ import {
 import { useNavigation, useRoute } from "@react-navigation/native";
 import {
   MaterialIcons,
-  MaterialCommunityIcons,
   Feather,
   FontAwesome,
   Octicons,
@@ -31,15 +30,26 @@ import { uploadImage } from "../../lib/functions/uploadImage";
 import * as ImagePicker from "expo-image-picker";
 import uuid from "react-native-uuid";
 import { getRandomColor } from "../../lib/functions/getRandomColor";
+import { getPost } from "../../lib/functions/getPost";
+import { hashTagsSuggesion } from "../../lib/functions/junk/hashTag";
 
 export default function CreatePost() {
-  const { currentUserData, allUserNameTags, usersCollection } = useContextApi();
+  const {
+    currentUserData,
+    usersCollection,
+    setPostCollection,
+  } = useContextApi();
   const { imageUri } = useRoute().params;
   const [textAreaValue, setTextAreaValue] = useState("");
   const [images, setImages] = useState(imageUri);
   const [showModal, setShowModal] = useState(false);
+  const [showModalHashTag, setShowModalHashTag] = useState(false);
   const [listUserInfo, setListUserInfo] = useState([]);
   const [tags, setTags] = useState([]);
+  const [hashTags, setHashTags] = useState([]);
+  const [listHashTagSuggesion, setlistHashTagSuggesion] = useState(
+    hashTagsSuggesion
+  );
 
   const navigation = useNavigation();
 
@@ -78,11 +88,6 @@ export default function CreatePost() {
 
     if (result.cancelled) return;
 
-    if (result.type !== "image") {
-      alert("file not support");
-      return;
-    }
-
     if (result.base64.length > 4371340) {
       alert("maximum size 2MB");
       return;
@@ -98,6 +103,19 @@ export default function CreatePost() {
     setListUserInfo(searchTag);
   };
 
+  const handleSearchHashTag = (value) => {
+    const searchHashTag = hashTagsSuggesion.filter((hashTag) => {
+      if (hashTag.toUpperCase().search(value.toUpperCase()) !== -1) {
+        return hashTag;
+      }
+    });
+    if (searchHashTag.length === 0) {
+      setlistHashTagSuggesion([`#${value.split(" ").join("_")}`]);
+      return;
+    }
+    setlistHashTagSuggesion(searchHashTag);
+  };
+
   const createPost = async () => {
     const imageUploaded = images ? await uploadImage(images.uri) : null;
     try {
@@ -111,17 +129,23 @@ export default function CreatePost() {
         createdAt: Timestamp.now(),
         postID: uuid.v4(),
         tags: tags,
-        hashTags: [],
+        hashTags: hashTags,
       };
       const userCollectionsRef = doc(collection(db, "Post"));
       await setDoc(userCollectionsRef, data);
     } catch (e) {
       console.error(e);
     }
+    getPost().then((data) => setPostCollection(data));
   };
 
   const handleModal = () => {
     setShowModal(!showModal);
+  };
+
+  const handleModalHashTag = () => {
+    setlistHashTagSuggesion(hashTagsSuggesion);
+    setShowModalHashTag(!showModalHashTag);
   };
 
   const handleSubmit = async () => {
@@ -194,13 +218,22 @@ export default function CreatePost() {
             </TouchableOpacity>
           ))}
         </HStack>
+        <HStack flexWrap="wrap" space={2}>
+          {hashTags.map((value, index) => (
+            <TouchableOpacity key={index}>
+              <Text color="darkBlue.500">{value}</Text>
+            </TouchableOpacity>
+          ))}
+        </HStack>
         {images && (
           <Box>
             <IconButton
               position="absolute"
-              top={0}
-              right={0}
+              top={1}
+              right={1}
               zIndex={1}
+              size="md"
+              bgColor="danger.400"
               onPress={() => setImages(null)}
               variant="ghost"
               borderRadius="full"
@@ -208,8 +241,8 @@ export default function CreatePost() {
               _icon={{
                 as: Ionicons,
                 name: "md-close",
-                size: "xl",
-                color: "gray.400",
+                size: "md",
+                color: "lightText",
               }}
             />
             <Image
@@ -232,17 +265,6 @@ export default function CreatePost() {
             color: "darkBlue.400",
           }}
         />
-        <IconButton
-          variant="ghost"
-          borderRadius="full"
-          _pressed={{ bg: "gray.50" }}
-          _icon={{
-            as: MaterialCommunityIcons,
-            name: "file-gif-box",
-            size: "2xl",
-            color: "darkBlue.400",
-          }}
-        />
 
         <IconButton
           onPress={handleModal}
@@ -252,20 +274,20 @@ export default function CreatePost() {
           _icon={{
             as: Feather,
             name: "at-sign",
-            size: "2xl",
+            size: "xl",
             color: "darkBlue.400",
           }}
         />
 
         <IconButton
-          onPress={handleModal}
+          onPress={handleModalHashTag}
           variant="ghost"
           borderRadius="full"
           _pressed={{ bg: "gray.50" }}
           _icon={{
             as: Octicons,
             name: "hash",
-            size: "2xl",
+            size: "xl",
             color: "darkBlue.400",
           }}
         />
@@ -313,6 +335,41 @@ export default function CreatePost() {
                   <Text color="gray.500">{user.tag}</Text>
                 </VStack>
               </HStack>
+            </Actionsheet.Item>
+          ))}
+        </Actionsheet.Content>
+      </Actionsheet>
+
+      <Actionsheet isOpen={showModalHashTag} onClose={handleModalHashTag}>
+        <Actionsheet.Content minH="2xl">
+          <Box justifyContent="center">
+            <Input
+              w={"100%"}
+              mb="5"
+              borderRadius="full"
+              onChangeText={handleSearchHashTag}
+              InputLeftElement={
+                <Icon
+                  as={<FontAwesome name="search" size={30} color="black" />}
+                  size={8}
+                  ml="5"
+                  color="muted.400"
+                />
+              }
+              placeholder="Cari..."
+              _focus={{ bgColor: "gray.50", borderColor: "gray.300" }}
+            />
+          </Box>
+
+          {listHashTagSuggesion.map((value, index) => (
+            <Actionsheet.Item
+              key={index}
+              onPress={() => {
+                setHashTags([...hashTags, value]);
+                handleModalHashTag();
+              }}
+            >
+              <Text color="gray.500">{value}</Text>
             </Actionsheet.Item>
           ))}
         </Actionsheet.Content>

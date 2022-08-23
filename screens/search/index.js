@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import { FlatList, TouchableOpacity } from "react-native";
-import { Box, HStack, Icon, Input, Text, Avatar } from "native-base";
-import { FontAwesome } from "@expo/vector-icons";
+import { Box, HStack, Icon, Input, Text, Avatar, VStack } from "native-base";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useContextApi } from "../../lib/hooks/useContexApi";
 import { getRandomColor } from "../../lib/functions/getRandomColor";
@@ -73,9 +73,19 @@ export default function Search() {
           >
             {item.name[0]}
           </Avatar>
-          <Text fontSize="md" fontFamily="myFont">
-            {item.name}
-          </Text>
+          <VStack>
+            <HStack alignItems="center" space="1">
+              <Text fontSize="md" fontFamily="myFont">
+                {item.name}
+              </Text>
+              {item.isVerified && (
+                <MaterialIcons name="verified" size={18} color="dodgerblue" />
+              )}
+            </HStack>
+            <Text fontSize="xs" color="gray.500">
+              {item.userName}
+            </Text>
+          </VStack>
         </HStack>
       </TouchableOpacity>
     );

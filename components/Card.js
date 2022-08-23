@@ -16,6 +16,7 @@ import {
   Foundation,
   Feather,
   FontAwesome5,
+  MaterialIcons,
 } from "@expo/vector-icons";
 import { Image, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -27,6 +28,8 @@ import {
   updateDoc,
   arrayUnion,
   arrayRemove,
+  collection,
+  setDoc,
 } from "firebase/firestore";
 import { db } from "../lib/config/firebase";
 import { useContextApi } from "../lib/hooks/useContexApi";
@@ -34,6 +37,7 @@ import AlertDialogStyle from "./AlertDialogStyle";
 import ModalStyle from "./ModalStyle";
 import { shareThisApp } from "../lib/functions/shareThisApp";
 import { formatStringLength } from "../lib/functions/formatString";
+import { getPost } from "../lib/functions/getPost";
 
 const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
   const {
@@ -51,9 +55,10 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
     upVote,
     tags,
     hashTags,
+    isVerified,
   } = data;
   const navigation = useNavigation();
-  const { currentUserData } = useContextApi();
+  const { currentUserData, setPostCollection } = useContextApi();
   const isCurrentUserPost = currentUserData.userID === userID;
   const commentTotal =
     comments
@@ -118,16 +123,28 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
     }
   };
 
-  const handleOpenModal = () => {
+  const handleModal = () => {
     setOpenModal(!openModal);
   };
 
   const handleDeletePost = async (docID) => {
     await deleteDoc(doc(db, "Post", docID));
+    getPost().then((data) => setPostCollection(data));
   };
 
   const handleNavigateToEditePost = () => {
     navigation.navigate("EditePost", { postData: data });
+  };
+
+  const handleReportPost = async (message) => {
+    const data = {
+      reporter: currentUserData.userID,
+      reported: userID,
+      message: message,
+      postID: docPostID,
+    };
+    const reportPost = doc(collection(db, "ReportPost"));
+    await setDoc(reportPost, data);
   };
 
   const HeaderCard = (
@@ -141,10 +158,13 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
             </Avatar>
           </TouchableOpacity>
         )}
-        <HStack alignItems="center" space={2}>
+        <HStack alignItems="center" space={1}>
           <Text fontSize="lg" style={{ fontFamily: "myFont" }}>
             {name}
           </Text>
+          {isVerified && (
+            <MaterialIcons name="verified" size={18} color="dodgerblue" />
+          )}
           <Text color="gray.500" fontSize={12}>
             {formatStringLength(userName)}
           </Text>
@@ -153,7 +173,7 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
           </Text>
         </HStack>
       </HStack>
-      <TouchableOpacity onPress={handleOpenModal}>
+      <TouchableOpacity onPress={handleModal}>
         <Entypo name="dots-three-horizontal" size={20} color="gray" />
       </TouchableOpacity>
     </HStack>
@@ -216,6 +236,7 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
             </TouchableOpacity>
           ))}
         </HStack>
+
         <HStack flexWrap="wrap" space={2}>
           {hashTags.map((hashTag, index) => (
             <TouchableOpacity
@@ -314,12 +335,12 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
         buttonTitleCancle="Cancle"
       />
 
-      <ModalStyle isOpen={openModal} onClose={handleOpenModal}>
+      <ModalStyle isOpen={openModal} onClose={handleModal}>
         {isCurrentUserPost && (
           <>
             <Actionsheet.Item
               onPress={() => {
-                handleOpenModal();
+                handleModal();
               }}
             >
               Ubah Pemirsa
@@ -327,14 +348,14 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
             <Actionsheet.Item
               onPress={() => {
                 handleNavigateToEditePost();
-                handleOpenModal();
+                handleModal();
               }}
             >
               Edit Post
             </Actionsheet.Item>
             <Actionsheet.Item
               onPress={() => {
-                handleOpenModal();
+                handleModal();
                 setDisplayAlert(true);
               }}
             >
@@ -346,42 +367,48 @@ const Card = ({ data, avatarOnPress, isOnCommentScreen }) => {
           <>
             <Actionsheet.Item
               onPress={() => {
-                handleOpenModal();
+                handleModal();
+                handleReportPost("Ini adalah spam");
               }}
             >
               Ini adalah spam
             </Actionsheet.Item>
             <Actionsheet.Item
               onPress={() => {
-                handleOpenModal();
+                handleModal();
+                handleReportPost("Saya tidak menyukainya");
               }}
             >
               Saya tidak menyukainya
             </Actionsheet.Item>
             <Actionsheet.Item
               onPress={() => {
-                handleOpenModal();
+                handleModal();
+                handleReportPost("Ujaran atau simbol kebencian");
               }}
             >
               Ujaran atau simbol kebencian
             </Actionsheet.Item>
             <Actionsheet.Item
               onPress={() => {
-                handleOpenModal();
+                handleModal();
+                handleReportPost("Ketelanjangan atau aktivitas seksual");
               }}
             >
               Ketelanjangan atau aktivitas seksual
             </Actionsheet.Item>
             <Actionsheet.Item
               onPress={() => {
-                handleOpenModal();
+                handleModal();
+                handleReportPost("Informasi palsu");
               }}
             >
               Informasi palsu
             </Actionsheet.Item>
             <Actionsheet.Item
               onPress={() => {
-                handleOpenModal();
+                handleModal();
+                handleReportPost("Lainya");
               }}
             >
               Lainya

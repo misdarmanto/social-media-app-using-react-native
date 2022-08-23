@@ -1,7 +1,15 @@
 import React, { useEffect, useState, useLayoutEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
-import { Button, Text, Avatar, HStack, Box, IconButton } from "native-base";
-import { Ionicons, FontAwesome } from "@expo/vector-icons";
+import {
+  Button,
+  Text,
+  Avatar,
+  HStack,
+  Box,
+  IconButton,
+  VStack,
+} from "native-base";
+import { Ionicons, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { useContextApi } from "../../lib/hooks/useContexApi";
 import { FlatList, TouchableOpacity } from "react-native";
 import { getRandomColor } from "../../lib/functions/getRandomColor";
@@ -112,9 +120,18 @@ const RenderItem = ({ item }) => {
             {item.name[0]}
           </Avatar>
         </TouchableOpacity>
-        <Text fontSize="md" fontFamily="myFont">
-          {item.name}
-        </Text>
+
+        <VStack>
+          <HStack alignItems="center" space="1">
+            <Text fontSize="md" fontFamily="myFont">
+              {item.name}
+            </Text>
+            {item.isVerified && (
+              <MaterialIcons name="verified" size={18} color="dodgerblue" />
+            )}
+          </HStack>
+          <Text color="gray.500">{item.userName}</Text>
+        </VStack>
       </HStack>
       <Button
         onPress={() => {
@@ -128,18 +145,17 @@ const RenderItem = ({ item }) => {
         bgColor={isAlreadyFollow ? "gray.200" : "darkBlue.500"}
         size="xs"
         _pressed={{ bgColor: "darkBlue.400" }}
-        height="10"
         width="32"
         borderRadius="full"
         startIcon={
           <Ionicons
             name="person-add"
-            size={18}
+            size={15}
             color={isAlreadyFollow ? "gray" : "#FFF"}
           />
         }
         _text={{
-          fontSize: "sm",
+          fontSize: "xs",
           color: isAlreadyFollow ? "gray.500" : "lightText",
         }}
       >

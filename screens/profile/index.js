@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { Avatar, Box, Button, Text, HStack, VStack } from "native-base";
-import { Entypo, Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useLayoutEffect, useState } from "react";
+import { Box, Button, Text } from "native-base";
+import { Entypo, Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import Card from "../../components/Card";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useContextApi } from "../../lib/hooks/useContexApi";
@@ -13,6 +13,7 @@ import {
   handleFollowUser,
   handleUnfollowUser,
 } from "../../lib/functions/handleFollowAndUnfollow";
+import HeaderProfile from "../../components/HeaderProfile";
 
 export default function DetailProfile() {
   const { userTargetID } = useRoute().params;
@@ -52,6 +53,12 @@ export default function DetailProfile() {
       setIsDataAvaliable(true);
     }, 50);
   }, []);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: profile.name || "",
+    });
+  }, [profile]);
 
   const handleOnRefresh = () => {
     setIsRefresh(true);
@@ -125,82 +132,75 @@ export default function DetailProfile() {
   };
 
   const HeaderList = () => (
-    <VStack space="2" p="2" bgColor="lightText" pt="5">
-      <Avatar
-        bg="darkBlue.500"
-        alignSelf="center"
-        size="xl"
-        source={{
-          uri: profile.userProfile,
-        }}
-      >
-        {profile.name ? profile?.name[0] : "A"}
-        {profile.isOnline && <Avatar.Badge bg="green.500" />}
-      </Avatar>
-      <Text textAlign="center" fontSize="lg" fontFamily="myFont">
-        {profile.name}
-      </Text>
-      <HStack space={2} alignItems="center">
-        {!isAlreadyFollow && (
+    <HeaderProfile
+      isOnline={profile.isOnline}
+      name={profile.name}
+      userName={profile.userName}
+      userProfile={profile.userProfile}
+      totalPost={listPostOfCurrentUser.length}
+      followers={profile.followers.length}
+      following={profile.following.length}
+      bio={profile.bio}
+      joinAt={profile.joinAt}
+      isVerified={profile.isVerified}
+    >
+      {!isAlreadyFollow && (
+        <Button
+          onPress={handleFollow}
+          bgColor={"darkBlue.500"}
+          size="xs"
+          _pressed={{ bgColor: "darkBlue.400" }}
+          startIcon={<Ionicons name="person-add" size={18} color={"#FFF"} />}
+          flex={2}
+          _text={{
+            fontSize: "sm",
+            color: "lightText",
+          }}
+        >
+          Follow
+        </Button>
+      )}
+      {isAlreadyFollow && (
+        <>
           <Button
-            onPress={handleFollow}
-            bgColor={"darkBlue.500"}
+            variant="outline"
+            onPress={handleUnFollow}
             size="xs"
             _pressed={{ bgColor: "darkBlue.400" }}
-            startIcon={<Ionicons name="person-add" size={18} color={"#FFF"} />}
+            startIcon={
+              <Ionicons name="person-add" size={18} color={"dodgerblue"} />
+            }
+            borderColor="darkBlue.500"
             flex={2}
             _text={{
               fontSize: "sm",
-              color: "lightText",
+              color: "dodgerblue",
             }}
           >
-            Follow
+            Unfollow
           </Button>
-        )}
-
-        {isAlreadyFollow && (
-          <>
-            <Button
-              variant="outline"
-              onPress={handleUnFollow}
-              size="xs"
-              _pressed={{ bgColor: "darkBlue.400" }}
-              startIcon={
-                <Ionicons name="person-add" size={18} color={"dodgerblue"} />
-              }
-              borderColor="darkBlue.500"
-              flex={2}
-              _text={{
-                fontSize: "sm",
-                color: "dodgerblue",
-              }}
-            >
-              Unfollow
-            </Button>
-            <Button
-              variant="outline"
-              borderColor="darkBlue.500"
-              onPress={handleNavigateToChatingScreen}
-              size="xs"
-              _pressed={{ bgColor: "darkBlue.400" }}
-              startIcon={<Entypo name="chat" size={18} color="dodgerblue" />}
-              flex={2}
-              _text={{
-                fontSize: "sm",
-                color: "dodgerblue",
-              }}
-            >
-              Chat
-            </Button>
-          </>
-        )}
-      </HStack>
-    </VStack>
+        </>
+      )}
+      <Button
+        variant="outline"
+        borderColor="darkBlue.500"
+        onPress={handleNavigateToChatingScreen}
+        size="xs"
+        _pressed={{ bgColor: "darkBlue.400" }}
+        startIcon={<Entypo name="chat" size={18} color="dodgerblue" />}
+        flex={2}
+        _text={{
+          fontSize: "sm",
+          color: "dodgerblue",
+        }}
+      >
+        Chat
+      </Button>
+    </HeaderProfile>
   );
 
   return (
-    <>
-      {/* list post */}
+    <Box flex={1} bgColor="#FFF">
       {isDataAvaliable ? (
         <FlatList
           ListHeaderComponent={<HeaderList />}
@@ -219,6 +219,13 @@ export default function DetailProfile() {
           ))}
         </Box>
       )}
-    </>
+
+      {listPostOfCurrentUser.length === 0 && (
+        <Box flex={1} alignItems="center">
+          <FontAwesome5 name="list-alt" size={50} color="gray" />
+          <Text style={{ color: "gray" }}>Belum ada postingan</Text>
+        </Box>
+      )}
+    </Box>
   );
 }

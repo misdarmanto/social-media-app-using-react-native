@@ -38,6 +38,7 @@ import LoadingAnimation from "./components/animations/LoadingAnimation";
 import { StatusBar } from "expo-status-bar";
 import ReplyComment from "./screens/comments/components/ReplyComment";
 import PostByHashTag from "./screens/displayDataByHasgTag";
+import RedirectScreen from "./screens/redirectScreen";
 
 LogBox.ignoreLogs(["Warning:..."]); // ignore specific log
 LogBox.ignoreAllLogs(); // ignore all logs
@@ -64,6 +65,7 @@ function App() {
       if (user) {
         unsubscribe = onSnapshot(doc(db, "Users", user.email), (docSnap) => {
           setCurrentUserData({ userID: docSnap.id, ...docSnap.data() });
+          console.log("call")
           setIsAuth(true);
         });
       } else {
@@ -117,6 +119,12 @@ function App() {
           >
             {isAuth ? (
               <>
+                {currentUserData.following.length < 2 && (
+                  <Stack.Screen
+                    name="RedirectScreen"
+                    component={RedirectScreen}
+                  />
+                )}
                 <Stack.Screen
                   name="Main"
                   component={TabNavigation}
@@ -136,15 +144,11 @@ function App() {
                   name="FriendsSuggestion"
                   component={FriendsSuggestion}
                 />
+
                 <Stack.Screen name="PostByHashTag" component={PostByHashTag} />
               </>
             ) : (
               <>
-                <Stack.Screen
-                  name="Welcome"
-                  component={Welcome}
-                  options={{ headerShown: false }}
-                />
                 <Stack.Screen
                   name="Login"
                   component={Login}

@@ -72,8 +72,8 @@ export default function Home() {
   };
 
   // useEffect(() => {
-  //   if (currentUserData.following <= 5) {
-  //     navigation.navigate("FriendsSuggestion");
+  //   if (currentUserData.following.length <= 5) {
+  //     navigation.navigate("RedirectScreen");
   //   }
   // }, []);
 
@@ -198,28 +198,26 @@ export default function Home() {
       return data.userID !== currentUserData.userID;
     });
 
-    let listFollowUserSuggesion = userSuggesion;
+    let listSuggesion = userSuggesion;
 
     if (Array.isArray(currentUserData.following)) {
       currentUserData.following.forEach((user) => {
-        listFollowUserSuggesion = listFollowUserSuggesion.filter(
-          (data) => data.userID !== user
-        );
+        listSuggesion = listSuggesion.filter((data) => data.userID !== user);
       });
     }
+    const [listFollowUserSuggesion, setListFollowUserSuggesion] = useState(
+      listSuggesion
+    );
 
     const handleFollow = (ID) => {
       handleFollowUser({
         currentUserID: currentUserData.userID,
         userTargetID: ID,
       });
-    };
-
-    const handleUnfollow = (ID) => {
-      handleUnfollowUser({
-        currentUserID: currentUserData.userID,
-        userTargetID: ID,
-      });
+      const newUser = listFollowUserSuggesion.filter(
+        (user) => user.userID !== ID
+      );
+      setListFollowUserSuggesion(newUser);
     };
 
     return (
@@ -308,6 +306,7 @@ export default function Home() {
                   </Text>
                 </VStack>
                 <Button
+                  onPress={() => handleFollow(item.userID)}
                   bgColor="darkBlue.500"
                   size="xs"
                   _pressed={{ bgColor: "darkBlue.300" }}

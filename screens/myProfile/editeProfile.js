@@ -15,20 +15,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../lib/config/firebase";
+import { uploadImage } from "../../lib/functions/uploadImage";
+import * as ImagePicker from "expo-image-picker";
 
 const EditeProfile = () => {
   const { currentUserData } = useContextApi();
   const navigation = useNavigation();
 
-  const [name, setName] = useState("");
-  const [userProfile, setUserProfile] = useState("");
-  const [bio, setBio] = useState("");
-
-  useEffect(() => {
-    setUserProfile(currentUserData.userProfile);
-    setName(currentUserData.name);
-    setBio(currentUserData.bio);
-  }, []);
+  const [userProfile, setUserProfile] = useState(currentUserData.userProfile);
+  const [name, setName] = useState(currentUserData.name);
+  const [bio, setBio] = useState(currentUserData.bio);
 
   const handleOnChangeTextname = (text) => {
     setName(text);
@@ -40,6 +36,7 @@ const EditeProfile = () => {
 
   const handleUpdateProfile = async () => {
     if (name === "" || bio === "") return;
+    const imageUploaded = userProfile ? await uploadImage(userProfile) : null;
 
     const docRef = doc(db, "Users", currentUserData.userID);
     await updateDoc(docRef, {
@@ -51,8 +48,27 @@ const EditeProfile = () => {
     });
 
     await updateDoc(docRef, {
-      userProfile: userProfile,
+      userProfile: imageUploaded.imageUri,
     });
+    navigation.goBack();
+  };
+
+  const handlPickImageFromLocalStorage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "Images",
+      allowsEditing: true,
+      aspect: [1, 1],
+      base64: true,
+      quality: 1,
+    });
+
+    if (result.cancelled) return;
+
+    if (result.base64.length > 4371340) {
+      alert("maximum size 2MB");
+      return;
+    }
+    setUserProfile(result.uri);
   };
 
   useLayoutEffect(() => {
@@ -71,34 +87,20 @@ const EditeProfile = () => {
           }}
         />
       ),
-
-      headerRight: () => (
-        <Button
-          variant="ghost"
-          onPress={() => {
-            handleUpdateProfile().then(() => navigation.goBack());
-          }}
-          _text={{ color: "darkBlue.500", fontSize: "xl" }}
-        >
-          Save
-        </Button>
-      ),
     });
   }, []);
 
   return (
     <Box flex={1} bgColor="#FFF" pt="5" px={"3"}>
       <VStack space={"5"}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={handlPickImageFromLocalStorage}>
           <Avatar
-            bg={getRandomColor(currentUserData.name[0])}
+            bg={getRandomColor(name[0])}
             alignSelf="center"
             size="xl"
-            source={{
-              uri: currentUserData.userProfile,
-            }}
+            source={{ uri: userProfile }}
           >
-            {currentUserData.name[0]}
+            {name[0]}
           </Avatar>
         </TouchableOpacity>
         <VStack>
@@ -117,6 +119,16 @@ const EditeProfile = () => {
             onChangeText={handleOnChangeTextBio}
           />
         </VStack>
+
+        <Button
+          onPress={handleUpdateProfile}
+          size="xs"
+          bgColor="darkBlue.500"
+          _text={{ fontSize: "md", color: "lightText" }}
+          _pressed={{ bgColor: "darkBlue.300" }}
+        >
+          Save
+        </Button>
       </VStack>
     </Box>
   );

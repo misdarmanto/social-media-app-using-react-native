@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
-  Box,
   Heading,
   VStack,
   Input,
@@ -11,9 +10,11 @@ import {
   Text,
   FormControl,
   WarningOutlineIcon,
+  ScrollView,
+  Checkbox,
 } from "native-base";
-import { MaterialIcons, Entypo } from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native";
+import { MaterialIcons, Entypo, Feather } from "@expo/vector-icons";
+import { TouchableOpacity, Linking, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
 import { createUserWithEmailAndPassword } from "firebase/auth";
@@ -21,12 +22,24 @@ import { auth } from "../../lib/config/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../../lib/config/firebase";
 import { useContextApi } from "../../lib/hooks/useContexApi";
+import {
+  emailInputCheck,
+  nameInputCheck,
+  passwordInputCheck,
+  userNameInputCheck,
+} from "./functions/inputCheck";
 
 export default function SignUp() {
-  const { setIsAuth } = useContextApi();
+  const { setIsAuth, allUserNameTags, setCurrentUserData } = useContextApi();
 
   const [name, setName] = useState(null);
   const [nameError, setNameError] = useState({
+    isError: false,
+    message: "",
+  });
+
+  const [userName, setUserName] = useState(null);
+  const [userNameError, setUserNameError] = useState({
     isError: false,
     message: "",
   });
@@ -41,32 +54,41 @@ export default function SignUp() {
     message: "",
   });
 
+  const [termsAndConditionChekBox, setTermsAndConditionChekBox] = useState({
+    isCheked: false,
+    isError: false,
+  });
+
   const navigation = useNavigation();
 
+  useEffect(() => {
+    const getTags = allUserNameTags.map((tag) => tag.toUpperCase());
+    if (getTags.includes(`@${userName}`.toUpperCase())) {
+      setUserNameError({ isError: true, message: "user name sudah digunakan" });
+      return;
+    }
+    console.log(userName);
+  }, [userName]);
+
   const handleSubmit = () => {
-    if (!email) {
-      setEmailError({ isError: true, message: "email field can't empty" });
-      return;
-    }
+    const emailInputCheckResult = emailInputCheck(email);
+    setEmailError(emailInputCheckResult);
+    if (emailInputCheckResult.isError) return;
 
-    if (!name) {
-      setNameError({ isError: true, message: "name field can't empty" });
-      return;
-    }
+    const nameInputCheckResult = nameInputCheck(name);
+    setNameError(nameInputCheckResult);
+    if (nameInputCheckResult.isError) return;
 
-    if (name.length <= 3 || name.length >= 15) {
-      setNameError({
-        isError: true,
-        message: "name character should be 3 to 15",
-      });
-      return;
-    }
+    const userNameInputCheckResult = userNameInputCheck(userName);
+    setUserNameError(userNameInputCheckResult);
+    if (userNameInputCheckResult.isError) return;
 
-    if (!password) {
-      setPasswordError({
-        isError: true,
-        message: "password field can't empty",
-      });
+    const passwordInputCheckResult = passwordInputCheck(password);
+    setPasswordError(passwordInputCheckResult);
+    if (passwordInputCheckResult.isError) return;
+
+    if (!termsAndConditionChekBox.isCheked) {
+      setTermsAndConditionChekBox({ isCheked: false, isError: true });
       return;
     }
 
@@ -81,22 +103,26 @@ export default function SignUp() {
 
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
+        const createdAt = new Date().toDateString();
         const user = userCredential.user;
         const userData = {
           name: name,
+          userName: `@${userName}`,
           email: user.email,
           userProfile: user.photoURL,
           isOnline: true,
+          isVerified: false,
           bio: "",
           chatList: [],
           followers: [],
           following: [],
           notifications: [],
+          joinAt: createdAt,
         };
         createUserDB(userData, user.email).then(() => {
-          setIsAuth(true);
           setEmail(null);
           setName(null);
+          setUserName(null);
           setPassword(null);
         });
       })
@@ -115,28 +141,34 @@ export default function SignUp() {
       });
   };
 
+  const handleLinkOnPress = useCallback(async () => {
+    const url =
+      "https://www.privacypolicyonline.com/live.php?token=Uvo29NkYm1zXTClkdCLdFtTalfYqqB6z";
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert(`Don't know how to open this URL: ${url}`);
+    }
+  }, []);
+
   return (
-    <VStack flex={1} space={"20"} bgColor="darkBlue.500" pt="30%">
-      <Heading textAlign="center" color="lightText">
-        SignUp
-      </Heading>
-      <Box
-        flex={2}
-        bgColor="lightText"
-        borderTopRadius="30"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Stack space={4} w="100%" p={"5"}>
+    <ScrollView flex={1} bgColor="#FFF" showsVerticalScrollIndicator={false}>
+      <VStack space={"10"} pt="50%">
+        <Heading textAlign="center" color="darkBlue.500" fontFamily="myFont">
+          SignUp
+        </Heading>
+
+        <Stack space={4} p={"5"}>
           <FormControl isInvalid={emailError.isError}>
             <Input
-              bgColor={"gray.100"}
+              bgColor={"gray.50"}
               borderColor="gray.200"
               borderRadius={"10"}
               _focus={{ borderColor: "darkBlue.100" }}
               InputLeftElement={
                 <Icon
-                  as={<Entypo name="email" size={24} />}
+                  as={<MaterialIcons name="email" />}
                   size={5}
                   ml="2"
                   color="muted.400"
@@ -156,7 +188,7 @@ export default function SignUp() {
 
           <FormControl isInvalid={nameError.isError}>
             <Input
-              bgColor={"gray.100"}
+              bgColor={"gray.50"}
               borderColor="gray.200"
               borderRadius={"10"}
               _focus={{ borderColor: "darkBlue.100" }}
@@ -180,9 +212,37 @@ export default function SignUp() {
             </FormControl.ErrorMessage>
           </FormControl>
 
+          <FormControl isInvalid={userNameError.isError}>
+            <Input
+              bgColor={"gray.50"}
+              borderColor="gray.200"
+              borderRadius={"10"}
+              _focus={{ borderColor: "darkBlue.100" }}
+              InputLeftElement={
+                <Icon
+                  as={<Feather name="at-sign" />}
+                  size={5}
+                  ml="2"
+                  color="muted.400"
+                />
+              }
+              value={userName}
+              onChangeText={(text) => {
+                setUserName(text.split(" ").join("_"));
+              }}
+              onChange={() => setUserNameError({ isError: false, message: "" })}
+              placeholder="User name"
+            />
+            <FormControl.ErrorMessage
+              leftIcon={<WarningOutlineIcon size="xs" />}
+            >
+              {userNameError.message}
+            </FormControl.ErrorMessage>
+          </FormControl>
+
           <FormControl isInvalid={passwordError.isError}>
             <Input
-              bgColor={"gray.100"}
+              bgColor={"gray.50"}
               borderColor="gray.200"
               borderRadius={"10"}
               _focus={{ borderColor: "darkBlue.100" }}
@@ -212,6 +272,33 @@ export default function SignUp() {
             </FormControl.ErrorMessage>
           </FormControl>
 
+          <FormControl isInvalid={termsAndConditionChekBox.isError}>
+            <HStack alignItems="center" space="2">
+              <Checkbox
+                value={true}
+                onChange={(value) => {
+                  setTermsAndConditionChekBox({
+                    isCheked: value,
+                    isError: false,
+                  });
+                }}
+                accessibilityLabel="terms & conditions"
+              />
+
+              <HStack alignItems="center" space="1">
+                <Text color={"gray.500"}>I accept the</Text>
+                <TouchableOpacity onPress={handleLinkOnPress}>
+                  <Text color="darkBlue.500">terms & conditions</Text>
+                </TouchableOpacity>
+              </HStack>
+            </HStack>
+            <FormControl.ErrorMessage
+              leftIcon={<WarningOutlineIcon size="xs" />}
+            >
+              You must select the terms & conditions
+            </FormControl.ErrorMessage>
+          </FormControl>
+
           <Button
             mt={"5"}
             bgColor="darkBlue.500"
@@ -224,14 +311,14 @@ export default function SignUp() {
         </Stack>
 
         <HStack space={"2"} alignItems="center" justifyContent="center">
-          <Text color="gray.500">already have an account?</Text>
+          <Text color="gray.500">Already have an account?</Text>
           <TouchableOpacity onPress={() => navigation.navigate("Login")}>
             <Text fontSize={"md"} color="darkBlue.500">
               SignIn
             </Text>
           </TouchableOpacity>
         </HStack>
-      </Box>
-    </VStack>
+      </VStack>
+    </ScrollView>
   );
 }

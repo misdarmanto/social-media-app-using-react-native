@@ -1,6 +1,6 @@
-import { Box, Heading, VStack, Text, Button, HStack } from "native-base";
+import { Heading, VStack, Text, Button, HStack, IconButton } from "native-base";
 import { TouchableOpacity } from "react-native";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, FontAwesome5 } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
 export default function Welcome() {
@@ -9,14 +9,17 @@ export default function Welcome() {
   return (
     <VStack
       flex={1}
-      space={"18"}
+      space="8"
       bgColor="darkBlue.500"
       pt="30%"
       justifyContent="center"
     >
-      <Heading textAlign="center" color="lightText">
-        Welcome
-      </Heading>
+      <HStack justifyContent="center" alignItems="center" space={2}>
+        <FontAwesome5 name="feather-alt" color="#FFF" size={35} />
+        <Text color="lightText" style={{ fontSize: 20, fontFamily: "myFont" }}>
+          Ndopok Club
+        </Text>
+      </HStack>
       <VStack p={"5"} space={"5"}>
         <Button
           variant="solid"
